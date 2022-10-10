@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.10.3 -->
+<interface>
+  <!-- interface-name app-printer-dialog.ui -->
+  <requires lib="gtk" version="4.6"/>
+  <template class="PpAppPrinterDialog" parent="GtkDialog">
+    <property name="child">
+      <object class="GtkBox" id="app_printer_main_box">
+        <child>
+          <object class="GtkScrolledWindow" id="app_printer_scrolled_window">
+            <property name="halign">center</property>
+            <property name="has-frame">True</property>
+            <property name="height-request">160</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="margin-bottom">198</property>
+            <property name="margin-start">14</property>
+            <property name="valign">center</property>
+            <property name="width-request">200</property>
+            <child>
+              <object class="GtkTreeView" id="app_printer_list_treeview">
+                <property name="accessible-role">radio</property>
+                <property name="enable-tree-lines">True</property>
+                <child internal-child="selection">
+                  <object class="GtkTreeSelection" id="treeview-selection"/>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkFixed" id="app_printer_dialog_button_panel">
+            <property name="width-request">203</property>
+            <child>
+              <object class="GtkButton" id="app_printer_dialog_auto_add">
+                <property name="halign">center</property>
+                <property name="label">Auto-Add</property>
+                <property name="margin-start">19</property>
+                <property name="margin-top">131</property>
+                <property name="sensitive">False</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="app_printer_dialog_install">
+                <property name="halign">center</property>
+                <property name="label">Install</property>
+                <property name="margin-start">19</property>
+                <property name="margin-top">89</property>
+                <property name="sensitive">False</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="app_printer_dialog_search">
+                <property name="accessible-role">menu-item-radio</property>
+                <property name="halign">center</property>
+                <property name="label">Search</property>
+                <property name="margin-bottom">3</property>
+                <property name="margin-start">18</property>
+                <property name="margin-top">47</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="app_printer_dialog_web">
+                <property name="accessible-role">menu-item-radio</property>
+                <property name="halign">center</property>
+                <property name="label">Web Interface</property>
+                <property name="margin-bottom">3</property>
+                <property name="margin-start">18</property>
+                <property name="margin-top">172</property>
+                <property name="sensitive">False</property>
+                <property name="valign">center</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkFixed"/>
+        </child>
+      </object>
+    </property>
+    <property name="default-height">400</property>
+    <property name="default-width">400</property>
+    <property name="destroy-with-parent">True</property>
+    <property name="height-request">400</property>
+    <property name="modal">True</property>
+    <property name="title">Printer Application Dialog</property>
+  </template>
+</interface>

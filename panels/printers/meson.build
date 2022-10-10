@@ -28,6 +28,7 @@ sources = files(
   'pp-maintenance-command.c',
   'pp-new-printer-dialog.c',
   'pp-new-printer.c',
+  'pp-app-printer-dialog.c',
   'pp-options-dialog.c',
   'pp-ppd-option-widget.c',
   'pp-ppd-selection-dialog.c',
@@ -46,7 +47,8 @@ resource_data = files(
   'pp-jobs-dialog.ui',
   'pp-options-dialog.ui',
   'printer-entry.ui',
-  'printers.ui'
+  'printers.ui',
+  'app-printer-dialog.ui'
 )
 
 sources += gnome.compile_resources(
@@ -61,7 +63,8 @@ deps = common_deps + [
   cups_dep,
   m_dep,
   polkit_gobject_dep,
-  dependency('smbclient')
+  dependency('smbclient'),
+  curl_dep
 ]
 
 printers_panel_lib = static_library(

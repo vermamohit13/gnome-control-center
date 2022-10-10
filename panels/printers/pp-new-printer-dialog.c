@@ -34,6 +34,7 @@
 #include "pp-host.h"
 #include "pp-new-printer.h"
 #include "pp-ppd-selection-dialog.h"
+#include "pp-app-printer-dialog.h"
 #include "pp-samba.h"
 #include "pp-utils.h"
 
@@ -138,6 +139,8 @@ struct _PpNewPrinterDialog
   gboolean  samba_searching;
 
   PpPPDSelectionDialog *ppd_selection_dialog;
+
+  PpAppPrinterDialog *app_printer_dialog;
 
   PpPrintDevice *new_device;
 
@@ -1729,30 +1732,34 @@ new_printer_dialog_response_cb (PpNewPrinterDialog *self,
 
       if (device)
         {
-          acquisition_method = pp_print_device_get_acquisition_method (device);
-          if (acquisition_method == ACQUISITION_METHOD_SAMBA ||
-              acquisition_method == ACQUISITION_METHOD_SAMBA_HOST ||
-              acquisition_method == ACQUISITION_METHOD_JETDIRECT ||
-              acquisition_method == ACQUISITION_METHOD_LPD)
-            {
-              self->new_device = pp_print_device_copy (device);
-              self->ppd_selection_dialog =
-                pp_ppd_selection_dialog_new (self->list,
-                                             NULL,
-                                             ppd_selection_cb,
-                                             self);
+          // acquisition_method = pp_print_device_get_acquisition_method (device);
+          // if (acquisition_method == ACQUISITION_METHOD_SAMBA ||
+          //     acquisition_method == ACQUISITION_METHOD_SAMBA_HOST ||
+          //     acquisition_method == ACQUISITION_METHOD_JETDIRECT ||
+          //     acquisition_method == ACQUISITION_METHOD_LPD)
+          //   {
+              // self->new_device = pp_print_device_copy (device);
+              // self->ppd_selection_dialog =
+              //   pp_ppd_selection_dialog_new (self->list,
+              //                                NULL,
+              //                                ppd_selection_cb,
+              //                                self);
 
-              gtk_window_set_transient_for (GTK_WINDOW (self->ppd_selection_dialog),
+              // gtk_window_set_transient_for (GTK_WINDOW (self->ppd_selection_dialog),
+              //                               GTK_WINDOW (self));
+
+              // /* New device will be set at return from ppd selection */
+              // gtk_widget_show (GTK_WIDGET (self->ppd_selection_dialog));
+          //   }
+          // else
+          //   {
+          //     self->new_device = pp_print_device_copy (device);
+          //     self->user_callback (GTK_DIALOG (self), GTK_RESPONSE_OK, self->user_data);
+          //   }
+          self->app_printer_dialog = pp_app_printer_dialog_new (device);
+          gtk_window_set_transient_for (GTK_WINDOW (self->app_printer_dialog),
                                             GTK_WINDOW (self));
-
-              /* New device will be set at return from ppd selection */
-              gtk_widget_show (GTK_WIDGET (self->ppd_selection_dialog));
-            }
-          else
-            {
-              self->new_device = pp_print_device_copy (device);
-              self->user_callback (GTK_DIALOG (self), GTK_RESPONSE_OK, self->user_data);
-            }
+          gtk_widget_show ( GTK_WIDGET (self->app_printer_dialog));
         }
     }
   else
@@ -1829,7 +1836,11 @@ pp_new_printer_dialog_dispose (GObject *object)
       gtk_window_destroy (GTK_WINDOW (self->ppd_selection_dialog));
       self->ppd_selection_dialog = NULL;
     }
-
+  if (self->app_printer_dialog != NULL)
+    {
+      gtk_window_destroy (self->app_printer_dialog);
+      self->app_printer_dialog = NULL;
+    }
   if (self->num_of_dests > 0)
     {
       cupsFreeDests (self->num_of_dests, self->dests);
