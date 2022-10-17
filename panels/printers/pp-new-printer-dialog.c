@@ -1836,11 +1836,6 @@ pp_new_printer_dialog_dispose (GObject *object)
       gtk_window_destroy (GTK_WINDOW (self->ppd_selection_dialog));
       self->ppd_selection_dialog = NULL;
     }
-  if (self->app_printer_dialog != NULL)
-    {
-      gtk_window_destroy (self->app_printer_dialog);
-      self->app_printer_dialog = NULL;
-    }
   if (self->num_of_dests > 0)
     {
       cupsFreeDests (self->num_of_dests, self->dests);
