@@ -74,7 +74,6 @@ struct _CcDisplayPanel
   guint           focus_id;
 
   CcNightLightPage *night_light_page;
-  GtkDialog *night_light_dialog;
   GtkLabel *night_light_state_label;
 
   UpClient *up_client;
@@ -92,11 +91,11 @@ struct _CcDisplayPanel
 
   GtkWidget      *display_settings_disabled_group;
 
-  GtkWidget      *arrangement_group;
+  GtkWidget      *arrangement_row;
   AdwBin         *arrangement_bin;
   GtkToggleButton *config_type_join;
   GtkToggleButton *config_type_mirror;
-  GtkWidget      *config_type_switcher_row;
+  GtkWidget      *display_multiple_displays;
   AdwBin         *display_settings_bin;
   GtkWidget      *display_settings_group;
   AdwWindowTitle *display_settings_title_widget;
@@ -162,6 +161,22 @@ cc_panel_get_selected_type (CcDisplayPanel *panel)
     return CC_DISPLAY_CONFIG_CLONE;
   else
     g_assert_not_reached ();
+}
+
+static CcDisplayMode *
+find_preferred_mode (GList *modes)
+{
+  GList *l;
+
+  for (l = modes; l; l = l->next)
+    {
+      CcDisplayMode *mode = l->data;
+
+      if (cc_display_mode_is_preferred (mode))
+        return mode;
+    }
+
+  return NULL;
 }
 
 static void
@@ -238,34 +253,22 @@ config_ensure_of_type (CcDisplayPanel *panel, CcDisplayConfigType type)
       {
         g_debug ("Creating new clone config");
         gdouble scale;
-        GList *modes = cc_display_config_get_cloning_modes (panel->current_config);
-        gint bw, bh;
-        CcDisplayMode *best = NULL;
+        g_autolist(CcDisplayMode) modes = NULL;
+        CcDisplayMode *clone_mode;
 
         /* Turn on cloning and select the best mode we can find by default */
         cc_display_config_set_cloning (panel->current_config, TRUE);
 
-        while (modes)
-          {
-            CcDisplayMode *mode = modes->data;
-            gint w, h;
-
-            cc_display_mode_get_resolution (mode, &w, &h);
-            if (best == NULL || (bw*bh < w*h))
-              {
-                best = mode;
-                cc_display_mode_get_resolution (best, &bw, &bh);
-              }
-
-            modes = modes->next;
-          }
+        modes = cc_display_config_generate_cloning_modes (panel->current_config);
+        clone_mode = find_preferred_mode (modes);
+        g_return_if_fail (clone_mode);
 
         /* Take the preferred scale by default, */
-        scale = cc_display_mode_get_preferred_scale (best);
+        scale = cc_display_mode_get_preferred_scale (clone_mode);
         /* but prefer the old primary scale if that is valid. */
         if (current_primary &&
             cc_display_config_is_scaled_mode_valid (panel->current_config,
-                                                    best,
+                                                    clone_mode,
                                                     old_primary_scale))
           scale = old_primary_scale;
 
@@ -273,7 +276,7 @@ config_ensure_of_type (CcDisplayPanel *panel, CcDisplayConfigType type)
           {
             CcDisplayMonitor *output = l->data;
 
-            cc_display_monitor_set_mode (output, best);
+            cc_display_monitor_set_compatible_clone_mode (output, clone_mode);
             cc_display_monitor_set_scale (output, scale);
           }
       }
@@ -433,8 +436,6 @@ cc_display_panel_dispose (GObject *object)
 
   g_clear_object (&self->shell_proxy);
 
-  g_clear_pointer ((GtkWindow **) &self->night_light_dialog, gtk_window_destroy);
-
   g_signal_handlers_disconnect_by_data (toplevel, self);
 
   G_OBJECT_CLASS (cc_display_panel_parent_class)->dispose (object);
@@ -483,27 +484,6 @@ on_config_type_toggled_cb (CcDisplayPanel *panel,
 }
 
 static void
-on_night_light_list_box_row_activated_cb (CcDisplayPanel *panel)
-{
-  GtkWindow *toplevel;
-  toplevel = GTK_WINDOW (cc_shell_get_toplevel (cc_panel_get_shell (CC_PANEL (panel))));
-
-  if (!panel->night_light_dialog)
-    {
-      GtkWidget *content_area;
-
-      panel->night_light_dialog = (GtkDialog *)gtk_dialog_new ();
-
-      content_area = gtk_dialog_get_content_area (panel->night_light_dialog);
-      gtk_box_append (GTK_BOX (content_area), GTK_WIDGET (panel->night_light_page));
-      gtk_widget_show (GTK_WIDGET (panel->night_light_page));
-    }
-
-  gtk_window_set_transient_for (GTK_WINDOW (panel->night_light_dialog), toplevel);
-  gtk_window_present (GTK_WINDOW (panel->night_light_dialog));
-}
-
-static void
 on_night_light_enabled_changed_cb (GSettings      *settings,
                                    const gchar    *key,
                                    CcDisplayPanel *self)
@@ -522,7 +502,7 @@ on_night_light_row_activated_cb (GtkListBoxRow  *row,
 }
 
 static void
-on_primary_display_selected_index_changed_cb (CcDisplayPanel *panel)
+on_primary_display_selected_item_changed_cb (CcDisplayPanel *panel)
 {
   gint idx = adw_combo_row_get_selected (panel->primary_display_row);
   g_autoptr(CcDisplayMonitor) output = NULL;
@@ -603,10 +583,10 @@ cc_display_panel_class_init (CcDisplayPanelClass *klass)
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, apply_titlebar);
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, apply_titlebar_title_widget);
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, display_settings_disabled_group);
-  gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, arrangement_group);
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, arrangement_bin);
+  gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, arrangement_row);
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, cancel_button);
-  gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, config_type_switcher_row);
+  gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, display_multiple_displays);
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, config_type_join);
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, config_type_mirror);
   gtk_widget_class_bind_template_child (widget_class, CcDisplayPanel, display_settings_bin);
@@ -623,9 +603,8 @@ cc_display_panel_class_init (CcDisplayPanelClass *klass)
   gtk_widget_class_bind_template_callback (widget_class, apply_current_configuration);
   gtk_widget_class_bind_template_callback (widget_class, on_back_button_clicked_cb);
   gtk_widget_class_bind_template_callback (widget_class, on_config_type_toggled_cb);
-  gtk_widget_class_bind_template_callback (widget_class, on_night_light_list_box_row_activated_cb);
   gtk_widget_class_bind_template_callback (widget_class, on_night_light_row_activated_cb);
-  gtk_widget_class_bind_template_callback (widget_class, on_primary_display_selected_index_changed_cb);
+  gtk_widget_class_bind_template_callback (widget_class, on_primary_display_selected_item_changed_cb);
   gtk_widget_class_bind_template_callback (widget_class, on_screen_changed);
   gtk_widget_class_bind_template_callback (widget_class, on_toplevel_escape_pressed_cb);
 }
@@ -688,6 +667,7 @@ add_display_row (CcDisplayPanel   *self,
   number_string = g_strdup_printf ("%d", cc_display_monitor_get_ui_number (monitor));
   number_label = gtk_label_new (number_string);
   gtk_widget_set_valign (number_label, GTK_ALIGN_CENTER);
+  gtk_widget_set_halign (number_label, GTK_ALIGN_CENTER);
   gtk_widget_add_css_class (number_label, "monitor-label");
   adw_action_row_add_prefix (ADW_ACTION_ROW (row), number_label);
 
@@ -748,7 +728,7 @@ rebuild_ui (CcDisplayPanel *panel)
     {
       gtk_widget_set_visible (panel->display_settings_disabled_group, TRUE);
       gtk_widget_set_visible (panel->display_settings_group, FALSE);
-      gtk_widget_set_visible (panel->arrangement_group, FALSE);
+      gtk_widget_set_visible (panel->arrangement_row, FALSE);
       return;
     }
 
@@ -818,11 +798,14 @@ rebuild_ui (CcDisplayPanel *panel)
       if (type > CC_DISPLAY_CONFIG_LAST_VALID)
         type = CC_DISPLAY_CONFIG_JOIN;
 
-      gtk_widget_set_visible (panel->display_settings_group, TRUE);
-      gtk_widget_set_visible (panel->config_type_switcher_row, TRUE);
-      gtk_widget_set_visible (panel->arrangement_group, type == CC_DISPLAY_CONFIG_JOIN);
+      gtk_widget_set_visible (panel->display_settings_group, type == CC_DISPLAY_CONFIG_JOIN);
+      gtk_widget_set_visible (panel->display_multiple_displays, TRUE);
+      gtk_widget_set_visible (panel->arrangement_row, type == CC_DISPLAY_CONFIG_JOIN);
 
-      move_display_settings_to_separate_page (panel);
+      if (type == CC_DISPLAY_CONFIG_CLONE)
+        move_display_settings_to_main_page (panel);
+      else
+        move_display_settings_to_separate_page (panel);
     }
   else if (n_usable_outputs > 1)
     {
@@ -830,8 +813,8 @@ rebuild_ui (CcDisplayPanel *panel)
        * and we always show the arrangement widget.
        */
       gtk_widget_set_visible (panel->display_settings_group, TRUE);
-      gtk_widget_set_visible (panel->config_type_switcher_row, FALSE);
-      gtk_widget_set_visible (panel->arrangement_group, TRUE);
+      gtk_widget_set_visible (panel->display_multiple_displays, FALSE);
+      gtk_widget_set_visible (panel->arrangement_row, TRUE);
 
       /* Mirror is also invalid as it cannot be configured using this UI. */
       if (type == CC_DISPLAY_CONFIG_CLONE || type > CC_DISPLAY_CONFIG_LAST_VALID)
@@ -844,13 +827,15 @@ rebuild_ui (CcDisplayPanel *panel)
       type = CC_DISPLAY_CONFIG_JOIN;
 
       gtk_widget_set_visible (panel->display_settings_group, FALSE);
-      gtk_widget_set_visible (panel->config_type_switcher_row, FALSE);
-      gtk_widget_set_visible (panel->arrangement_group, FALSE);
+      gtk_widget_set_visible (panel->display_multiple_displays, FALSE);
+      gtk_widget_set_visible (panel->arrangement_row, FALSE);
 
       move_display_settings_to_main_page (panel);
     }
 
-  cc_display_settings_set_multimonitor (panel->settings, n_outputs > 1);
+  cc_display_settings_set_multimonitor (panel->settings,
+                                        n_outputs > 1 &&
+                                        type != CC_DISPLAY_CONFIG_CLONE);
 
   cc_panel_set_selected_type (panel, type);
 
@@ -1080,7 +1065,7 @@ cc_display_panel_init (CcDisplayPanel *self)
   gtk_widget_init_template (GTK_WIDGET (self));
 
   self->arrangement = cc_display_arrangement_new (NULL);
-  gtk_widget_set_size_request (GTK_WIDGET (self->arrangement), 400, 175);
+  gtk_widget_set_size_request (GTK_WIDGET (self->arrangement), 375, 175);
   adw_bin_set_child (self->arrangement_bin, GTK_WIDGET (self->arrangement));
 
   g_signal_connect_object (self->arrangement, "updated",

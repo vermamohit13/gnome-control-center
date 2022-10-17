@@ -114,7 +114,8 @@ connection_ignored (NMConnection *connection)
 static CcWifiConnectionRow*
 cc_wifi_connection_list_row_add (CcWifiConnectionList *self,
                                  NMConnection         *connection,
-                                 NMAccessPoint        *ap)
+                                 NMAccessPoint        *ap,
+                                 gboolean              known_connection)
 {
   CcWifiConnectionRow *res;
   g_autoptr(GPtrArray) aps = NULL;
@@ -128,10 +129,13 @@ cc_wifi_connection_list_row_add (CcWifiConnectionList *self,
   res = cc_wifi_connection_row_new (self->device,
                                     connection,
                                     aps,
-                                    self->checkable);
+                                    self->checkable,
+                                    known_connection);
   gtk_list_box_append (self->listbox, GTK_WIDGET (res));
 
   g_signal_connect_object (res, "configure", G_CALLBACK (on_row_configured_cb), self, G_CONNECT_SWAPPED);
+
+  g_signal_emit_by_name (self, "add-row", res);
 
   return res;
 }
@@ -154,6 +158,7 @@ clear_widget (CcWifiConnectionList *self)
   while (g_hash_table_iter_next (&iter, NULL, (gpointer*) &row))
     {
       g_hash_table_iter_remove (&iter);
+      g_signal_emit_by_name (self, "remove-row", row);
       gtk_list_box_remove (self->listbox, GTK_WIDGET (row));
     }
 
@@ -165,6 +170,7 @@ clear_widget (CcWifiConnectionList *self)
 
       row = g_ptr_array_index (self->connections_row, i);
       g_ptr_array_index (self->connections_row, i) = NULL;
+      g_signal_emit_by_name (self, "remove-row", row);
       gtk_list_box_remove (self->listbox, GTK_WIDGET (row));
      }
 
@@ -228,7 +234,7 @@ update_connections (CcWifiConnectionList *self)
       else
         g_ptr_array_add (self->connections_row,
                          cc_wifi_connection_list_row_add (self, con,
-                         NULL));
+                         NULL, TRUE));
     }
 
   /* Coldplug all known APs again */
@@ -347,7 +353,7 @@ on_device_ap_added_cb (CcWifiConnectionList *self,
 
       row = g_ptr_array_index (self->connections_row, j);
       if (!row)
-        row = cc_wifi_connection_list_row_add (self, g_ptr_array_index (connections, i), NULL);
+        row = cc_wifi_connection_list_row_add (self, g_ptr_array_index (connections, i), NULL, TRUE);
       cc_wifi_connection_row_add_access_point (row, ap);
       g_ptr_array_index (self->connections_row, j) = row;
     }
@@ -378,7 +384,7 @@ on_device_ap_added_cb (CcWifiConnectionList *self,
   row = g_hash_table_lookup (self->ssid_to_row, ssid);
   if (!row)
     {
-      row = cc_wifi_connection_list_row_add (self, NULL, ap);
+      row = cc_wifi_connection_list_row_add (self, NULL, ap, FALSE);
 
       g_hash_table_insert (self->ssid_to_row, g_bytes_ref (ssid), row);
     }
@@ -412,6 +418,7 @@ on_device_ap_removed_cb (CcWifiConnectionList *self,
           if (self->hide_unavailable)
             {
               g_ptr_array_index (self->connections_row, i) = NULL;
+              g_signal_emit_by_name (self, "remove-row", row);
               gtk_list_box_remove (self->listbox, GTK_WIDGET (row));
             }
         }
@@ -433,6 +440,7 @@ on_device_ap_removed_cb (CcWifiConnectionList *self,
   if (cc_wifi_connection_row_remove_access_point (row, ap))
     {
       g_hash_table_remove (self->ssid_to_row, ssid);
+      g_signal_emit_by_name (self, "remove-row", row);
       gtk_list_box_remove (self->listbox, GTK_WIDGET (row));
     }
 }
@@ -703,6 +711,16 @@ cc_wifi_connection_list_class_init (CcWifiConnectionListClass *klass)
                                      props);
 
   g_signal_new ("configure",
+                CC_TYPE_WIFI_CONNECTION_LIST,
+                G_SIGNAL_RUN_LAST,
+                0, NULL, NULL, NULL,
+                G_TYPE_NONE, 1, CC_TYPE_WIFI_CONNECTION_ROW);
+  g_signal_new ("add-row",
+                CC_TYPE_WIFI_CONNECTION_LIST,
+                G_SIGNAL_RUN_LAST,
+                0, NULL, NULL, NULL,
+                G_TYPE_NONE, 1, CC_TYPE_WIFI_CONNECTION_ROW);
+  g_signal_new ("remove-row",
                 CC_TYPE_WIFI_CONNECTION_LIST,
                 G_SIGNAL_RUN_LAST,
                 0, NULL, NULL, NULL,

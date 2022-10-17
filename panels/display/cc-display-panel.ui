@@ -104,23 +104,7 @@
                         </child>
 
                         <child>
-                          <object class="AdwPreferencesGroup" id="arrangement_group">
-                            <child>
-                              <object class="AdwBin" id="arrangement_bin">
-                                <style>
-                                  <class name="card"/>
-                                </style>
-                              </object>
-                            </child>
-                            <accessibility>
-                              <property name="label" translatable="yes">Display Arrangement</property>
-                            </accessibility>
-                          </object>
-                        </child>
-
-                        <child>
-                          <object class="AdwPreferencesGroup" id="display_settings_group">
-
+                          <object class="AdwPreferencesGroup" id="display_multiple_displays">
                             <!-- Config Type -->
                             <child>
                               <object class="AdwActionRow" id="config_type_switcher_row">
@@ -149,13 +133,28 @@
                                 </child>
                               </object>
                             </child>
+                          </object>
+                        </child>
+
+                        <child>
+                          <object class="AdwPreferencesGroup" id="display_settings_group">
+                            <!-- Display Arrangement -->
+                            <child>
+                              <object class="AdwPreferencesRow" id="arrangement_row">
+                                <property name="activatable">False</property>
+                                <child>
+                                  <object class="AdwBin" id="arrangement_bin">
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
 
                             <!-- Primary Display -->
                             <child>
                               <object class="AdwComboRow" id="primary_display_row">
                                 <property name="subtitle" translatable="yes">Contains top bar and Activities</property>
                                 <property name="title" translatable="yes">Primary Display</property>
-                                <signal name="notify::selected-index" handler="on_primary_display_selected_index_changed_cb" swapped="yes"/>
+                                <signal name="notify::selected-item" handler="on_primary_display_selected_item_changed_cb" swapped="yes"/>
                               </object>
                             </child>
                           </object>
@@ -314,3 +313,4 @@
   </object>
 
 </interface>
+

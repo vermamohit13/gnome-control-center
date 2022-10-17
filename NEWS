@@ -1,4 +1,95 @@
 ================
+Version 43.0
+================
+
+- Updated translations
+
+================
+Version 43.rc
+================
+
+- Fix initial AM/PM label value
+- Remove no longer used icon
+- Select panel only if non-folded when search is canceled
+- Updated translations
+
+Appearance
+- Allow backgrounds to use any image format
+
+Device Security
+- Several UI improvements
+
+Display
+- Fix primary monitor selection
+
+Info
+- Improve dark theme support
+
+Keyboard
+- Fix activation of input source toggle button
+- Improve handling of Shift shortcuts
+
+Power
+- Fix blank screen and power button behavior settings
+
+Printers
+- Show empty state after removing last printer
+
+Search
+- Fix Move Up and Move Down actions
+
+Sound
+- Fix sound alert selection
+
+Wacom
+- Better support Wacom Express Key Remote
+
+================
+Version 43.beta
+================
+
+- Updated translations
+
+Cellular
+- Add WWAN 5G connection support
+
+Device Security
+- Polish failure messages
+- Various style updates
+
+Display
+- Support privacy screens
+
+Info
+- Show build id in a separate row
+
+Network
+- Fix VPN empty state
+
+Sound
+- Update default sounds
+
+User Accounts
+- Fix back button not appearing sometimes
+
+================
+Version 43.alpha
+================
+
+- Improved accessibility in various panels
+- New Device Security panel
+- Updated translations
+
+Date & Time
+- Update visual style of the timezone map
+
+Display
+- Various visual improvements
+
+Sound
+- Remove dog barking sounds
+
+================
 Version 42.1
 ================
 

@@ -1,8 +1,8 @@
 project(
   'gnome-control-center', 'c',
-        version : '43.alpha',
+        version : '43.1',
         license : 'GPL2+',
-  meson_version : '>= 0.53.0'
+  meson_version : '>= 0.57.0'
 )
 
 control_center_prefix = get_option('prefix')
@@ -115,7 +115,7 @@ pulse_req_version = '>= 2.0'
 
 libadwaita_dep = dependency(
   'libadwaita-1',
-  version: '>= 1.1',
+  version: '>= 1.2.alpha',
   fallback: ['libadwaita', 'libadwaita_dep'],
   default_options: ['examples=false', 'introspection=disabled', 'tests=false', 'vapi=false'],
 )
@@ -281,7 +281,6 @@ install_subdir(
 top_inc = include_directories('.')
 shell_inc = include_directories('shell')
 
-subdir('build-aux')
 subdir('data/icons')
 subdir('po')
 subdir('panels')
@@ -295,6 +294,11 @@ endif
 if get_option('documentation')
   subdir('man')
 endif
+
+gnome.post_install(
+  glib_compile_schemas: true,
+  gtk_update_icon_cache: true,
+)
 
 configure_file(
   output: 'config.h',

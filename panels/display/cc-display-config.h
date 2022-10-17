@@ -68,6 +68,14 @@ typedef enum _CcDisplayRotation
   CC_DISPLAY_ROTATION_270_FLIPPED,
 } CcDisplayRotation;
 
+typedef enum _CcDisplayMonitorPrivacy
+{
+  CC_DISPLAY_MONITOR_PRIVACY_UNSUPPORTED = 0,
+  CC_DISPLAY_MONITOR_PRIVACY_DISABLED = 1 << 0,
+  CC_DISPLAY_MONITOR_PRIVACY_ENABLED = 1 << 1,
+  CC_DISPLAY_MONITOR_PRIVACY_LOCKED = 1 << 2,
+} CcDisplayMonitorPrivacy;
+
 
 #define CC_TYPE_DISPLAY_MODE (cc_display_mode_get_type ())
 G_DECLARE_DERIVABLE_TYPE (CcDisplayMode, cc_display_mode,
@@ -77,10 +85,12 @@ struct _CcDisplayModeClass
 {
   GObjectClass parent_class;
 
+  gboolean      (*is_clone_mode)        (CcDisplayMode *self);
   void          (*get_resolution)       (CcDisplayMode *self, int *w, int *h);
   GArray*       (*get_supported_scales) (CcDisplayMode *self);
   double        (*get_preferred_scale)  (CcDisplayMode *self);
   gboolean      (*is_interlaced)        (CcDisplayMode *self);
+  gboolean      (*is_preferred)         (CcDisplayMode *self);
   int           (*get_freq)             (CcDisplayMode *self);
   double        (*get_freq_f)           (CcDisplayMode *self);
 };
@@ -121,9 +131,12 @@ struct _CcDisplayMonitorClass
   gboolean          (*get_underscanning)      (CcDisplayMonitor  *self);
   void              (*set_underscanning)      (CcDisplayMonitor  *self,
                                                gboolean           u);
+  CcDisplayMonitorPrivacy (*get_privacy)      (CcDisplayMonitor  *self);
   CcDisplayMode*    (*get_mode)               (CcDisplayMonitor  *self);
   CcDisplayMode*    (*get_preferred_mode)     (CcDisplayMonitor  *self);
   GList*            (*get_modes)              (CcDisplayMonitor  *self);
+  void              (*set_compatible_clone_mode) (CcDisplayMonitor  *self,
+                                                  CcDisplayMode     *m);
   void              (*set_mode)               (CcDisplayMonitor  *self,
                                                CcDisplayMode     *m);
   void              (*set_position)           (CcDisplayMonitor  *self,
@@ -152,7 +165,7 @@ struct _CcDisplayConfigClass
   gboolean (*is_cloning)        (CcDisplayConfig  *self);
   void     (*set_cloning)       (CcDisplayConfig  *self,
                                  gboolean          clone);
-  GList*   (*get_cloning_modes) (CcDisplayConfig  *self);
+  GList*   (*generate_cloning_modes) (CcDisplayConfig  *self);
   gboolean (*is_layout_logical) (CcDisplayConfig  *self);
   void     (*set_minimum_size)  (CcDisplayConfig  *self,
                                  int               width,
@@ -175,7 +188,7 @@ gboolean          cc_display_config_apply                   (CcDisplayConfig    
 gboolean          cc_display_config_is_cloning              (CcDisplayConfig    *config);
 void              cc_display_config_set_cloning             (CcDisplayConfig    *config,
                                                              gboolean            clone);
-GList*            cc_display_config_get_cloning_modes       (CcDisplayConfig    *config);
+GList*            cc_display_config_generate_cloning_modes  (CcDisplayConfig    *config);
 
 void              cc_display_config_set_mode_on_all_outputs (CcDisplayConfig *config,
                                                              CcDisplayMode   *mode);
@@ -214,6 +227,8 @@ gboolean          cc_display_monitor_get_underscanning      (CcDisplayMonitor  *
 void              cc_display_monitor_set_underscanning      (CcDisplayMonitor  *monitor,
                                                              gboolean           underscanning);
 
+CcDisplayMonitorPrivacy cc_display_monitor_get_privacy      (CcDisplayMonitor *self);
+
 CcDisplayMode*    cc_display_monitor_get_mode               (CcDisplayMonitor  *monitor);
 void              cc_display_monitor_get_geometry           (CcDisplayMonitor  *monitor,
                                                              int               *x,
@@ -226,6 +241,8 @@ double            cc_display_monitor_get_scale              (CcDisplayMonitor  *
 void              cc_display_monitor_set_scale              (CcDisplayMonitor  *monitor,
                                                              double s);
 
+void              cc_display_monitor_set_compatible_clone_mode (CcDisplayMonitor  *monitor,
+                                                                CcDisplayMode     *mode);
 void              cc_display_monitor_set_mode               (CcDisplayMonitor  *monitor,
                                                              CcDisplayMode     *mode);
 void              cc_display_monitor_set_position           (CcDisplayMonitor  *monitor,
@@ -241,12 +258,14 @@ const char*       cc_display_monitor_get_ui_name            (CcDisplayMonitor  *
 const char*       cc_display_monitor_get_ui_number_name     (CcDisplayMonitor  *monitor);
 char*             cc_display_monitor_dup_ui_number_name     (CcDisplayMonitor  *monitor);
 
+gboolean          cc_display_mode_is_clone_mode             (CcDisplayMode     *mode);
 void              cc_display_mode_get_resolution            (CcDisplayMode     *mode,
                                                              int               *width,
                                                              int               *height);
 GArray*           cc_display_mode_get_supported_scales      (CcDisplayMode     *self);
 double            cc_display_mode_get_preferred_scale       (CcDisplayMode     *self);
 gboolean          cc_display_mode_is_interlaced             (CcDisplayMode     *mode);
+gboolean          cc_display_mode_is_preferred              (CcDisplayMode     *mode);
 int               cc_display_mode_get_freq                  (CcDisplayMode     *mode);
 double            cc_display_mode_get_freq_f                (CcDisplayMode     *mode);
 

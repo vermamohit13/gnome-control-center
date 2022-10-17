@@ -143,6 +143,7 @@ modify_row_for_account (CcOnlineAccountsPanel *self,
 
 /* Auxiliary methods */
 
+G_GNUC_NULL_TERMINATED
 static char *
 run_goa_helper_sync (const char *command,
                      ...)
@@ -393,6 +394,10 @@ list_providers (CcOnlineAccountsPanel *self)
   GVariant *provider;
 
   providers = run_goa_helper_sync ("list-providers", NULL);
+
+  if (!providers)
+    return;
+
   providers_variant = g_variant_parse (G_VARIANT_TYPE ("a(ssviu)"),
                                        providers,
                                        NULL,

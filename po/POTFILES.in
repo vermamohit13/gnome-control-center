@@ -48,6 +48,14 @@ panels/display/cc-display-settings.ui
 panels/display/cc-night-light-page.c
 panels/display/cc-night-light-page.ui
 panels/display/gnome-display-panel.desktop.in.in
+panels/firmware-security/cc-firmware-security-boot-dialog.c
+panels/firmware-security/cc-firmware-security-boot-dialog.ui
+panels/firmware-security/cc-firmware-security-dialog.c
+panels/firmware-security/cc-firmware-security-dialog.ui
+panels/firmware-security/cc-firmware-security-panel.c
+panels/firmware-security/cc-firmware-security-panel.ui
+panels/firmware-security/cc-firmware-security-utils.c
+panels/firmware-security/gnome-firmware-security-panel.desktop.in.in
 panels/info-overview/cc-info-overview-panel.c
 panels/info-overview/cc-info-overview-panel.ui
 panels/info-overview/gnome-info-overview-panel.desktop.in.in
@@ -74,9 +82,6 @@ panels/keyboard/gnome-keyboard-panel.desktop.in.in
 panels/keyboard/keyboard-shortcuts.c
 panels/location/cc-location-panel.ui
 panels/location/gnome-location-panel.desktop.in.in
-panels/lock/cc-lock-panel.c
-panels/lock/cc-lock-panel.ui
-panels/lock/gnome-lock-panel.desktop.in.in
 panels/microphone/cc-microphone-panel.ui
 panels/microphone/gnome-microphone-panel.desktop.in.in
 panels/mouse/cc-mouse-panel.ui
@@ -197,6 +202,9 @@ panels/region/gnome-region-panel.desktop.in.in
 panels/removable-media/cc-removable-media-panel.c
 panels/removable-media/cc-removable-media-panel.ui
 panels/removable-media/gnome-removable-media-panel.desktop.in.in
+panels/screen/cc-screen-panel.c
+panels/screen/cc-screen-panel.ui
+panels/screen/gnome-screen-panel.desktop.in.in
 panels/search/cc-search-locations-dialog.c
 panels/search/cc-search-locations-dialog.ui
 panels/search/cc-search-panel.c
@@ -264,6 +272,7 @@ panels/wacom/calibrator/calibrator.ui
 panels/wacom/cc-wacom-button-row.c
 panels/wacom/cc-wacom-button-row.h
 panels/wacom/cc-wacom-device.c
+panels/wacom/cc-wacom-ekr-page.ui
 panels/wacom/cc-wacom-page.c
 panels/wacom/cc-wacom-page.ui
 panels/wacom/cc-wacom-panel.c
@@ -273,6 +282,7 @@ panels/wacom/cc-wacom-stylus-page.ui
 panels/wacom/cc-wacom-tool.c
 panels/wacom/gnome-wacom-panel.desktop.in.in
 panels/wacom/gsd-wacom-key-shortcut-button.c
+panels/wwan/cc-wwan-apn-dialog.c
 panels/wwan/cc-wwan-apn-dialog.ui
 panels/wwan/cc-wwan-data.c
 panels/wwan/cc-wwan-details-dialog.c
