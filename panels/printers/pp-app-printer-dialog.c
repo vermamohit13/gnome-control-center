@@ -50,8 +50,8 @@ G_DEFINE_TYPE (PpAppPrinterDialog, pp_app_printer_dialog, GTK_TYPE_DIALOG)
 static void
 pp_app_printer_dialog_dispose (GObject *object)
 {
-    PpAppPrinterDialog *self = PP_APP_PRINTER_DIALOG (object);
-    G_OBJECT_CLASS (pp_app_printer_dialog_parent_class)->dispose (object);
+  PpAppPrinterDialog *self = PP_APP_PRINTER_DIALOG (object);
+  G_OBJECT_CLASS (pp_app_printer_dialog_parent_class)->dispose (object);
 }
 
 struct MemoryStruct 
@@ -128,23 +128,22 @@ static void tokenize(const char *line, char app_data[][1000])
   return;
 }
 
-static void parse_apps(PpAppPrinterDialog *self, char *data)
+static void parse_apps (PpAppPrinterDialog *self, char *data)
 {
-     char *line = strtok(data,"\n");
-     char app_data[5][1000];
-     while(line != NULL)
-     {
-       tokenize(line,app_data);
-        self->list->printer_apps[self->list->num_of_apps] = g_new0(printer_app , 1);
-        self->list->printer_apps[self->list->num_of_apps]->printer_app_name = g_strdup(app_data[0]);
-        self->list->printer_apps[self->list->num_of_apps]->driver_name = g_strdup(app_data[1]);
-        self->list->printer_apps[self->list->num_of_apps]->description = g_strdup(app_data[2]);
-        self->list->printer_apps[self->list->num_of_apps]->device_id = g_strdup(app_data[3]);
-        self->list->num_of_apps++;
-        g_message("%s\n",app_data[2]);
-       line = strtok(NULL,"\n");
-     }
-     return;
+   char *line = strtok (data, "\n");
+   char app_data [5][1000];
+   while (line != NULL)
+   {
+     tokenize (line, app_data);
+      self->list->printer_apps[self->list->num_of_apps] = g_new0 (printer_app, 1);
+      self->list->printer_apps[self->list->num_of_apps]->printer_app_name = g_strdup (app_data[0]);
+      self->list->printer_apps[self->list->num_of_apps]->driver_name = g_strdup (app_data[1]);
+      self->list->printer_apps[self->list->num_of_apps]->description = g_strdup (app_data[2]);
+      self->list->printer_apps[self->list->num_of_apps]->device_id = g_strdup (app_data[3]);
+      self->list->num_of_apps++;
+     line = strtok (NULL,"\n");
+   }
+   return;
 } 
 
 static size_t
@@ -156,12 +155,12 @@ read_chunks(void *contents, size_t size, size_t nmemb, void *userp)
   char *ptr = realloc(mem->memory, mem->size + realsize + 1);
   if(!ptr) {
     /* out of memory! */
-    printf("not enough memory (realloc returned NULL)\n");
+    g_warning("Not enough memory (realloc returned NULL)\n");
     return 0;
   }
  
   mem->memory = ptr;
-  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  memcpy (&(mem->memory[mem->size]), contents, realsize);
   mem->size += realsize;
   mem->memory[mem->size] = 0;
  
@@ -176,27 +175,31 @@ fill_apps_list (PpAppPrinterDialog *self)
   GtkTreeView      *treeview;
   GtkTreeIter       iter;
   GtkTreeIter      *preselect_iter = NULL;
-  gint              i;
-
-  // gtk_widget_hide (GTK_WIDGET (self->ppd_spinner));
-  // gtk_spinner_stop (self->ppd_spinner);
-
-  // gtk_widget_hide (GTK_WIDGET (self->progress_label));
+  gint              i,
+                    start;
 
   treeview = self->app_printer_list_treeview;
-
+  start = 0;
   if (self->list)
     {
       store = gtk_list_store_new (1, G_TYPE_STRING, G_TYPE_STRING);
-
-      for (i = 0; i < self->list->num_of_apps; i++)
+    
+      if (self->list->num_of_apps > 1)
+      {
+          gtk_list_store_append (store, &iter);
+          gtk_list_store_set (store, &iter,
+                              PRINTER_APP_NAMES_COLUMN, g_strdup_printf("%s (Recommended)",self->list->printer_apps[0]->printer_app_name),
+                              -1);
+              preselect_iter = gtk_tree_iter_copy (&iter);
+              start++;
+      }
+      
+      for (i = start ; i < self->list->num_of_apps; i++)
         {
           gtk_list_store_append (store, &iter);
           gtk_list_store_set (store, &iter,
                               PRINTER_APP_NAMES_COLUMN, self->list->printer_apps[i]->printer_app_name,
-                              // PRINTER_APP_DISPLAY_NAMES_COLUMN, self->list->printer_apps[i]->printer_app_name,
-                              -1);
-          g_message("%s %d\n",self->list->printer_apps[i]->printer_app_name,i);
+                             -1);
           if (i == 0)
             {
               preselect_iter = gtk_tree_iter_copy (&iter);
@@ -311,7 +314,7 @@ populate_app_dialog (PpAppPrinterDialog *self)
 
   g_signal_connect_object (gtk_tree_view_get_selection (apps_treeview),
                            "changed", G_CALLBACK (apps_selection_changed_cb), self, G_CONNECT_SWAPPED);
-  poll_printer_app_cb(self);
+  // poll_printer_app_cb(self);
   fill_apps_list (self);
 }
 
@@ -332,27 +335,27 @@ search_app_printer_cb (PpAppPrinterDialog *self)
    curl = curl_easy_init();
    if(curl) {
     //  curl_easy_setopt(curl, CURLOPT_URL, URL);
-     curl_easy_setopt(curl, CURLOPT_URL, "https://openprinting.org/query.php?papps=true&device-id=MFG:HP;MDL:LaserJet%204050");
-     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, read_chunks);
-     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&buf);
-     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
-     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);     
+     curl_easy_setopt (curl, CURLOPT_URL, "https://openprinting.org/query.php?papps=true&device-id=MFG:HP;MDL:LaserJet%204050");
+     curl_easy_setopt (curl, CURLOPT_WRITEFUNCTION, read_chunks);
+     curl_easy_setopt (curl, CURLOPT_WRITEDATA, (void *)&buf);
+     curl_easy_setopt (curl, CURLOPT_VERBOSE, 1L);
+     curl_easy_setopt (curl, CURLOPT_TIMEOUT, 10L);
+     curl_easy_setopt (curl, CURLOPT_FAILONERROR, 1L);     
      res = curl_easy_perform(curl);
       /* always cleanup */
 
      if(res == CURLE_OK)
-        parse_apps(self,buf.memory);
-     else
+        parse_apps (self, buf.memory);
+     else if ( res == CURLE_OPERATION_TIMEDOUT)
+        g_warning ("Curl Timed out\n");      
+      else
         g_warning(curl_easy_strerror(res));
    }
    else {
         g_warning("Error while using curl_easy_init().\n");
    }
      curl_easy_cleanup(curl);
-    g_message("Done Parsing\n");
-     populate_app_dialog(self);
-  
+     populate_app_dialog(self);  
 }
 
 static void
@@ -364,6 +367,7 @@ auto_add_app_printer_cb (PpAppPrinterDialog *self)
 static void
 web_app_printer_cb (PpAppPrinterDialog *self)
 {
+    //  gchar *URL;      // Need to make a API call to cups-pk-helper for the url of printer Application
 
 }
 
@@ -382,7 +386,6 @@ app_printer_dialog_response_cb (PpAppPrinterDialog *self,
   GtkTreeModel     *model;
   GtkTreeView      *models_treeview;
   GtkTreeIter       iter;
-  g_message("In cb.\n");
   if (response_id == GTK_RESPONSE_OK)
     {
       models_treeview = self->app_printer_list_treeview;
