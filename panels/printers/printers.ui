@@ -13,6 +13,16 @@
         </style>
       </object>
     </child>
+       <child>
+      <object class="GtkButton" id="dns-sd-button">
+        <property name="visible">True</property>
+        <property name="use_underline">True</property>
+        <property name="label" translatable="yes" comments="Translators:This button checks dns-sd">DNS-SD</property>
+        <style>
+          <class name="suggested-action"/>
+        </style>
+      </object>
+    </child>
     <child>
       <object class="GtkToggleButton" id="search-button">
         <property name="margin-end">6</property> <!-- since we don't have access to the shell header bar -->

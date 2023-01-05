@@ -41,6 +41,8 @@
 #include "pp-printer-entry.h"
 #include "pp-job.h"
 #include "pp-new-printer.h"
+#include "pp-dns-row.h"
+#include "pp-dns-window.h"
 
 #include "cc-permission-infobar.h"
 #include "cc-util.h"
@@ -964,6 +966,13 @@ new_printer_dialog_response_cb (GtkDialog *_dialog,
 }
 
 static void
+dns_sd_button_cb(CcPrintersPanel *self){
+  // for the dummy printer details to be passed on we need atleast one destination to show up for now... will fix later.
+  GtkWidget* dns_window = (GtkWidget*) pp_dns_window_new();
+  gtk_widget_show (GTK_WIDGET (dns_window));
+}
+
+static void
 printer_add_cb (CcPrintersPanel *self)
 {
   GtkNative *native;
@@ -1252,8 +1261,12 @@ cc_printers_panel_init (CcPrintersPanel *self)
   widget = (GtkWidget*)
     gtk_builder_get_object (self->builder, "printer-add-button");
   g_signal_connect_object (widget, "clicked", G_CALLBACK (printer_add_cb), self, G_CONNECT_SWAPPED);
+   widget = (GtkWidget*)
 
+    gtk_builder_get_object (self->builder, "dns-sd-button");
+  g_signal_connect_object (widget, "clicked", G_CALLBACK (dns_sd_button_cb), self, G_CONNECT_SWAPPED);
   widget = (GtkWidget*)
+  
     gtk_builder_get_object (self->builder, "printer-add-button2");
   g_signal_connect_object (widget, "clicked", G_CALLBACK (printer_add_cb), self, G_CONNECT_SWAPPED);
 

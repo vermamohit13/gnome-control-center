@@ -142,6 +142,8 @@ epoxy_dep = dependency('epoxy')
 gcr_dep = dependency('gcr-base-3')
 pwquality_dep = dependency('pwquality', version: '>= 1.2.2')
 curl_dep = dependency('libcurl', version: '>=7.29.0') 
+avahi_glib_dep = dependency('avahi-glib', version: '>= 0.8')
+avahi_client_dep = dependency('avahi-client', version:'>=0.8')
 m_dep = cc.find_library('m')
 
 common_deps = [
