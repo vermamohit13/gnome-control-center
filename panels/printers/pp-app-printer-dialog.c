@@ -132,10 +132,15 @@ static void parse_apps (PpAppPrinterDialog *self, char *data)
 {
    char *line = strtok (data, "\n");
    char app_data [5][1000];
+   self->list->num_of_apps = 0;
+
    while (line != NULL)
    {
-     tokenize (line, app_data);
-      self->list->printer_apps[self->list->num_of_apps] = g_new0 (printer_app, 1);
+      tokenize (line, app_data);
+      if (self->list->printer_apps[self->list->num_of_apps] == NULL)
+        {
+          self->list->printer_apps[self->list->num_of_apps] = g_new0 (printer_app, 1);
+        }      
       self->list->printer_apps[self->list->num_of_apps]->printer_app_name = g_strdup (app_data[0]);
       self->list->printer_apps[self->list->num_of_apps]->driver_name = g_strdup (app_data[1]);
       self->list->printer_apps[self->list->num_of_apps]->description = g_strdup (app_data[2]);
@@ -292,7 +297,8 @@ poll_printer_app_cb (PpAppPrinterDialog *self)
 static void
 populate_app_dialog (PpAppPrinterDialog *self)
 {
-  GtkTreeViewColumn *column;
+  GtkTreeViewColumn *column,
+                    *prev_column;  
   GtkCellRenderer   *renderer;
   GtkTreeView       *apps_treeview;
   GtkWidget         *header;
@@ -310,6 +316,13 @@ populate_app_dialog (PpAppPrinterDialog *self)
   gtk_widget_set_margin_start (header, 10);
   gtk_tree_view_column_set_widget (column, header);
   gtk_widget_show (header);
+  
+  prev_column = gtk_tree_view_get_column (apps_treeview, 0);
+  if (prev_column)
+   {
+    gtk_tree_view_remove_column (apps_treeview, prev_column);
+   }
+
   gtk_tree_view_append_column (apps_treeview, column);
 
   g_signal_connect_object (gtk_tree_view_get_selection (apps_treeview),
