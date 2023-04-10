@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include "pp-cups.h"
+#include "pp-ipp-device.h"
 
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 5)
 #define HAVE_CUPS_1_6 1
@@ -70,6 +71,12 @@ _pp_cups_get_dests_thread (GTask        *task,
 
   dests = g_new0 (PpCupsDests, 1);
   dests->num_of_dests = cupsGetDests (&dests->dests);
+  dests->num_of_dests = cupsGetIPPDevices (&dests->dests, dests->num_of_dests);
+  for (int i = 0; i < dests->num_of_dests; i++)
+    { 
+      g_message("iteration %d", i);
+      g_message("%s -> %d", (&dests->dests[i])->name, (&dests->dests[i])->num_options);
+    }
 
   if (g_task_set_return_on_cancel (task, FALSE))
     {

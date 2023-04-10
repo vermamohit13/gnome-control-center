@@ -847,8 +847,10 @@ actualize_printers_list_cb (GObject      *source_object,
     {
       if (new_printer_available && g_strcmp0 (self->dests[i].name, self->old_printer_name) == 0)
           continue;
-
+      // g_message("%d h", 1);
+      // g_message("%s\n", self->dests[i].options[0].value);
       item = g_hash_table_lookup (self->printer_entries, self->dests[i].name);
+      // g_message("%d h", 2);
       if (item != NULL)
         pp_printer_entry_update (PP_PRINTER_ENTRY (item), self->dests[i], self->is_authorized);
       else
@@ -866,7 +868,6 @@ actualize_printers_list_cb (GObject      *source_object,
 
       self->entries_filled = TRUE;
     }
-
   update_sensitivity (user_data);
 
   if (self->new_printer_name != NULL)
@@ -1263,10 +1264,11 @@ cc_printers_panel_init (CcPrintersPanel *self)
   g_signal_connect_object (widget, "clicked", G_CALLBACK (printer_add_cb), self, G_CONNECT_SWAPPED);
    widget = (GtkWidget*)
 
+  /* DNS-SD Button to list DNS Devices & Services*/
     gtk_builder_get_object (self->builder, "dns-sd-button");
   g_signal_connect_object (widget, "clicked", G_CALLBACK (dns_sd_button_cb), self, G_CONNECT_SWAPPED);
-  widget = (GtkWidget*)
   
+  widget = (GtkWidget*)
     gtk_builder_get_object (self->builder, "printer-add-button2");
   g_signal_connect_object (widget, "clicked", G_CALLBACK (printer_add_cb), self, G_CONNECT_SWAPPED);
 

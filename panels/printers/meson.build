@@ -38,7 +38,8 @@ sources = files(
   'pp-samba.c',
   'pp-utils.c',
   'pp-dns-row.c',
-  'pp-dns-window.c'
+  'pp-dns-window.c',
+  'pp-ipp-device.c'
 )
 
 resource_data = files(

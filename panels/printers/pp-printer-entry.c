@@ -49,6 +49,7 @@ struct _PpPrinterEntry
   gboolean  is_accepting_jobs;
   gchar    *printer_make_and_model;
   gchar    *printer_location;
+  gchar    *web_interface;
   gchar    *printer_hostname;
   gboolean  is_authorized;
   gint      printer_state;
@@ -74,6 +75,9 @@ struct _PpPrinterEntry
   GtkCheckButton *printer_default_checkbutton;
   GtkWidget      *remove_printer_menuitem;
   GtkBox         *printer_error;
+  GtkButton      *printer_detail_btn;
+  GtkButton      *printer_options_dialog_btn;
+  GtkLinkButton      *web_interface_btn;
   GtkLabel       *error_status;
 
   /* Dialogs */
@@ -387,6 +391,14 @@ show_printer_details_response_cb (PpDetailsDialog *dialog,
   gtk_window_destroy (GTK_WINDOW (dialog));
 }
 
+static void 
+on_click_web_interface (GtkButton      *button,
+                        PpPrinterEntry *self)
+{
+    // gtk_show_uri_on_window (self, self->web_interface, 0, NULL);
+    // gtk_window_present (GTK_WINDOW (self));
+    // gtk_show_uri_with_window (NULL, self->web_interface, gtk_get_current_event_time(), NULL);
+}
 static void
 on_show_printer_details_dialog (GtkButton      *button,
                                 PpPrinterEntry *self)
@@ -685,6 +697,8 @@ pp_printer_entry_update (PpPrinterEntry *self,
   gboolean          ink_supply_is_empty;
   g_autofree gchar *instance = NULL;
   const gchar      *printer_uri = NULL;
+  const gchar      *web_interface = NULL;
+  const gchar      *dev_type = NULL;
   const gchar      *device_uri = NULL;
   const gchar      *location = NULL;
   g_autofree gchar *printer_icon_name = NULL;
@@ -761,11 +775,16 @@ pp_printer_entry_update (PpPrinterEntry *self,
     }
 
   self->printer_state = PRINTER_READY;
+  // gtk_widget_hide (GTK_WIDGET (self->web_interface_btn));
 
   for (i = 0; i < printer.num_options; i++)
     {
       if (g_strcmp0 (printer.options[i].name, "device-uri") == 0)
         device_uri = printer.options[i].value;
+      else if (g_strcmp0 (printer.options[i].name, "web-interface") == 0)
+        web_interface = printer.options[i].value, self->web_interface = web_interface;
+      else if (g_strcmp0 (printer.options[i].name, "OBJ_TYPE") == 0)
+        dev_type = printer.options[i].value;
       else if (g_strcmp0 (printer.options[i].name, "printer-uri-supported") == 0)
         printer_uri = printer.options[i].value;
       else if (g_strcmp0 (printer.options[i].name, "printer-type") == 0)
@@ -851,6 +870,17 @@ pp_printer_entry_update (PpPrinterEntry *self,
         status = g_strdup (_(statuses[report_index]));
     }
 
+  if (web_interface != NULL)
+  {
+      gtk_widget_set_visible (GTK_WIDGET (self->web_interface_btn), TRUE);
+      g_message ("%s\n", web_interface);
+      gtk_link_button_set_uri (self->web_interface_btn, web_interface);
+      gtk_widget_set_sensitive (GTK_WIDGET (self->web_interface_btn), TRUE);
+  }
+  else {
+      gtk_widget_set_visible (GTK_WIDGET (self->web_interface_btn), FALSE);
+  }
+    
   if ((self->printer_state == PRINTER_STOPPED || !is_accepting_jobs) &&
       status != NULL && status[0] != '\0')
     {
@@ -908,7 +938,14 @@ pp_printer_entry_update (PpPrinterEntry *self,
   gtk_check_button_set_active (self->printer_default_checkbutton, printer.is_default);
   g_signal_handlers_unblock_by_func (self->printer_default_checkbutton, set_as_default_printer, self);
 
-  self->printer_make_and_model = sanitize_printer_model (printer_make_and_model);
+  if (dev_type == NULL || g_strcmp0 (dev_type, "PRINTER_OBJECT") == 0)
+    self->printer_make_and_model = sanitize_printer_model (printer_make_and_model);
+  else
+    {
+      gtk_widget_hide (GTK_WIDGET (self->printer_detail_btn));
+      gtk_widget_hide (GTK_WIDGET (self->printer_options_dialog_btn));
+      gtk_widget_hide (GTK_WIDGET (self->printer_default_checkbutton));
+    }
 
   if (self->printer_make_and_model == NULL || self->printer_make_and_model[0] == '\0')
     {
@@ -984,7 +1021,11 @@ pp_printer_entry_class_init (PpPrinterEntryClass *klass)
   gtk_widget_class_bind_template_child (widget_class, PpPrinterEntry, remove_printer_menuitem);
   gtk_widget_class_bind_template_child (widget_class, PpPrinterEntry, error_status);
   gtk_widget_class_bind_template_child (widget_class, PpPrinterEntry, printer_error);
+  gtk_widget_class_bind_template_child (widget_class, PpPrinterEntry, web_interface_btn);
+  gtk_widget_class_bind_template_child (widget_class, PpPrinterEntry, printer_options_dialog_btn);
+  gtk_widget_class_bind_template_child (widget_class, PpPrinterEntry, printer_detail_btn);
 
+  gtk_widget_class_bind_template_callback (widget_class, on_click_web_interface);
   gtk_widget_class_bind_template_callback (widget_class, on_show_printer_details_dialog);
   gtk_widget_class_bind_template_callback (widget_class, on_show_printer_options_dialog);
   gtk_widget_class_bind_template_callback (widget_class, set_as_default_printer);

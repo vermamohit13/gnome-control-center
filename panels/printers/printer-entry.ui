@@ -14,9 +14,9 @@
         <property name="margin-end">10</property>
 
         <child>
-          <object class="GtkModelButton">
-            <property name="text" translatable="yes">Printing Options</property>
-            <signal name="clicked" handler="on_show_printer_options_dialog"/>
+          <object class="GtkLinkButton" id = "web_interface_btn" >
+            <property name="label" translatable="yes">Web Interface</property>
+            <signal name="clicked" handler="on_click_web_interface"/>
             <layout>
               <property name="column">1</property>
               <property name="row">0</property>
@@ -25,12 +25,23 @@
         </child>
 
         <child>
-          <object class="GtkModelButton">
+          <object class="GtkModelButton" id = "printer_options_dialog_btn">
+            <property name="text" translatable="yes">Printing Options</property>
+            <signal name="clicked" handler="on_show_printer_options_dialog"/>
+            <layout>
+              <property name="column">1</property>
+              <property name="row">1</property>
+            </layout>
+          </object>
+        </child>
+
+        <child>
+          <object class="GtkModelButton" id = "printer_detail_btn">
             <property name="text" translatable="yes">Printer Details</property>
             <signal name="clicked" handler="on_show_printer_details_dialog"/>
             <layout>
               <property name="column">1</property>
-              <property name="row">1</property>
+              <property name="row">2</property>
             </layout>
           </object>
         </child>
@@ -41,7 +52,7 @@
             <signal name="toggled" handler="set_as_default_printer"/>
             <layout>
               <property name="column">0</property>
-              <property name="row">2</property>
+              <property name="row">3</property>
               <property name="column-span">3</property>
             </layout>
           </object>
@@ -53,7 +64,7 @@
             <signal name="clicked" handler="clean_heads"/>
             <layout>
               <property name="column">1</property>
-              <property name="row">3</property>
+              <property name="row">4</property>
             </layout>
           </object>
         </child>
@@ -63,7 +74,7 @@
             <signal name="clicked" handler="remove_printer"/>
             <layout>
               <property name="column">1</property>
-              <property name="row">4</property>
+              <property name="row">5</property>
             </layout>
           </object>
         </child>
