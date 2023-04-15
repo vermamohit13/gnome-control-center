@@ -873,7 +873,6 @@ pp_printer_entry_update (PpPrinterEntry *self,
   if (web_interface != NULL)
   {
       gtk_widget_set_visible (GTK_WIDGET (self->web_interface_btn), TRUE);
-      g_message ("%s\n", web_interface);
       gtk_link_button_set_uri (self->web_interface_btn, web_interface);
       gtk_widget_set_sensitive (GTK_WIDGET (self->web_interface_btn), TRUE);
   }

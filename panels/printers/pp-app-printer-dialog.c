@@ -415,7 +415,6 @@ app_printer_dialog_response_cb (PpAppPrinterDialog *self,
                                       PRINTER_APP_NAMES_COLUMN, &self->printer_app_name,
                                       // PRINTER_APP_DISPLAY_NAMES_COLUMN, &self->printer_app_name,
                                       -1);
-                 g_message("%s\n",self->printer_app_name);
                 }
             }
         }

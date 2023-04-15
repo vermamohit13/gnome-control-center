@@ -845,10 +845,7 @@ actualize_printers_list_cb (GObject      *source_object,
     {
       if (new_printer_available && g_strcmp0 (self->dests[i].name, self->old_printer_name) == 0)
           continue;
-      // g_message("%d h", 1);
-      // g_message("%s\n", self->dests[i].options[0].value);
       item = g_hash_table_lookup (self->printer_entries, self->dests[i].name);
-      // g_message("%d h", 2);
       if (item != NULL)
         pp_printer_entry_update (PP_PRINTER_ENTRY (item), self->dests[i], self->is_authorized);
       else
