@@ -228,7 +228,7 @@ get_printers (http_t            *http,			   // http connection
 
 	if (g_list_length(printer_names) != g_list_length(printer_uris))
 	{
-		puts("Error: printer-name and printer-uri-supported attributes not returning correct number of values");
+		// puts("Error: printer-name and printer-uri-supported attributes not returning correct number of values");
 		return 0;
 	}
 
@@ -250,13 +250,12 @@ get_printers (http_t            *http,			   // http connection
    
     if (get_attributes(PRINTER_OBJECT, http, printer_uri, buff, buff_size, dest))
 		{
-      // g_message("%s\n", printer_uri);
 			so->services = g_list_append(so->services, dest);
 
-			printf("Get-Printer-attributes: Success\n");
+			// printf("Get-Printer-attributes: Success\n");
 		} else
 		{
-			printf("Error: Get-Printer-attributes: Failed\n");
+			// printf("Error: Get-Printer-attributes: Failed\n");
 			check = 0;
 		}
 	}
@@ -271,12 +270,12 @@ get_services (AvahiData* data)
     cups_dest_t* dest = g_new0 (cups_dest_t, 1);
     dest->options = g_new0 (cups_option_t, 20);
     
-    dest->name = g_strdup(data->name);
+    dest->name = g_strdup (data->name);
     if (data->uri == NULL)
     {
 
         char uri[1024];
-        httpAssembleURI(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
+        httpAssembleURI (HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
                         data->hostname, data->port, "/ipp/system");
 
         data->uri = g_strdup(uri);
@@ -295,12 +294,11 @@ get_services (AvahiData* data)
         {
             data->objAttr = g_strdup(buff);
             data->services = g_list_append(data->services, dest);
-            printf("Get-system-attributes: Success\n");
         }
 
         else
         {
-            printf("Error: Get-system-attributes: Failed\n");
+            // printf("Error: Get-system-attributes: Failed\n");
         }
     }
 
@@ -311,18 +309,15 @@ get_services (AvahiData* data)
 
         /* Get Printers */
 
-        if (get_printers(http, data, OBJ_ATTR_SIZE))
+        if (get_printers (http, data, OBJ_ATTR_SIZE))
         {
-            printf("Get-Printers: Success\n");
+            // printf("Get-Printers: Success\n");
         }
-
         else
         {
-            data->services = g_list_append(data->services, dest);
-            printf("Error: Get-Printers: Failed\n");
+            // printf("Error: Get-Printers: Failed\n");
         }
 
-        /* Add other methods to get scanners, get queues */
     }
 }
 
@@ -372,7 +367,6 @@ avahi_service_resolver_cb (GVariant*     output,
                 data->port = port;
                 data->family = protocol;
                 data->name = g_strdup (name);
-                // g_message ("%s\n", data->name);
                 data->type = g_strdup (type);
                 data->domain = g_strdup (domain);
                 data->services = NULL;
@@ -384,9 +378,7 @@ avahi_service_resolver_cb (GVariant*     output,
                 if (iter == NULL)
                   {
                      backend->system_objects = g_list_append (backend->system_objects, data);
-                    //  g_message("%s\n", g_list_first (backend->system_objects) ->data);
                      get_services (data);
-
                   }
                 else 
                  {
@@ -536,18 +528,12 @@ avahi_service_browser_new_cb (GVariant*     output,
                                                   printer_device_backend,
                                                   NULL);
 
-            /*
-             * The general subscription for all service browsers is not needed
-             * now because we are already subscribed to service browsers
-             * specific to _ipps-system._tcp services.
-             */
+           
             if (printer_device_backend->avahi_service_browser_paths[0] &&
                 printer_device_backend->avahi_service_browser_paths[1] &&
                 printer_device_backend->avahi_service_browser_subscription_id > 0)
               {
-                /* We need to unsubscribe in idle since signals in queue destined for emit
-                 * are emitted in idle and check whether the subscriber is still subscribed.
-                 */
+                
                 printer_device_backend->unsubscribe_general_subscription_id = g_idle_add (unsubscribe_general_subscription_cb, printer_device_backend);
               }
 
@@ -645,23 +631,12 @@ cupsGetIPPDevices (cups_dest_t** dests,
     {
         AvahiData* sys_obj = g_list_nth_data(sys_objs, i);
         int no_services = g_list_length (sys_obj->services);
-        // g_message("%s : %d\n", sys_obj->name, no_services);
 
         for (int j = 0; j < no_services; j++)
-          {
             new_dest[num_of_dests++] = *(cups_dest_t*)(g_list_nth_data(sys_obj->services, j)); 
-            // g_message("%s : %d\n", new_dest[num_of_dests-1].name, new_dest[num_of_dests-1].num_options);
-          }
     }
 
     *dests = new_dest;
-    // g_message ("No. of dest %d", num_of_dests);
-    // for (int i = 0; i < num_of_dests; i++)
-    // { 
-    //   g_message("iteration %d", i);
-    //   g_message("%s -> %d", (*dests)[i].name, (*dests)[i].num_options);
-    // }
-
 
     return num_of_dests;
 }

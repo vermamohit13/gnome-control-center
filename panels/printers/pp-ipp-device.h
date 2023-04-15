@@ -1,5 +1,7 @@
 
 #pragma once
+
+
 #include <cups/cups.h>
 #include <pappl/device.h>
 #include <stdbool.h>
