@@ -37,8 +37,6 @@ sources = files(
   'pp-printer.c',
   'pp-samba.c',
   'pp-utils.c',
-  'pp-dns-row.c',
-  'pp-dns-window.c',
   'pp-ipp-device.c'
 )
 
@@ -52,8 +50,6 @@ resource_data = files(
   'printer-entry.ui',
   'printers.ui',
   'app-printer-dialog.ui',
-  'pp-dns-row.ui',
-  'pp-dns-window.ui'
 )
 
 sources += gnome.compile_resources(
@@ -70,8 +66,6 @@ deps = common_deps + [
   polkit_gobject_dep,
   dependency('smbclient'),
   curl_dep,
-  avahi_glib_dep,
-  avahi_client_dep
 ]
 
 printers_panel_lib = static_library(
