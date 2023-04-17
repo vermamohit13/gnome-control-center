@@ -775,13 +775,12 @@ pp_printer_entry_update (PpPrinterEntry *self,
     }
 
   self->printer_state = PRINTER_READY;
-  // gtk_widget_hide (GTK_WIDGET (self->web_interface_btn));
 
   for (i = 0; i < printer.num_options; i++)
     {
       if (g_strcmp0 (printer.options[i].name, "device-uri") == 0)
         device_uri = printer.options[i].value;
-      else if (g_strcmp0 (printer.options[i].name, "web-interface") == 0)
+      else if (g_strcmp0 (printer.options[i].name, "printer-more-info") == 0)
         web_interface = printer.options[i].value, self->web_interface = web_interface;
       else if (g_strcmp0 (printer.options[i].name, "OBJ_TYPE") == 0)
         dev_type = printer.options[i].value;
@@ -937,13 +936,14 @@ pp_printer_entry_update (PpPrinterEntry *self,
   gtk_check_button_set_active (self->printer_default_checkbutton, printer.is_default);
   g_signal_handlers_unblock_by_func (self->printer_default_checkbutton, set_as_default_printer, self);
 
-  if (dev_type == NULL || g_strcmp0 (dev_type, "PRINTER_OBJECT") == 0)
+  if (dev_type == NULL)
     self->printer_make_and_model = sanitize_printer_model (printer_make_and_model);
   else
     {
       gtk_widget_hide (GTK_WIDGET (self->printer_detail_btn));
       gtk_widget_hide (GTK_WIDGET (self->printer_options_dialog_btn));
       gtk_widget_hide (GTK_WIDGET (self->printer_default_checkbutton));
+      gtk_widget_hide (GTK_WIDGET (self->remove_printer_menuitem));
     }
 
   if (self->printer_make_and_model == NULL || self->printer_make_and_model[0] == '\0')

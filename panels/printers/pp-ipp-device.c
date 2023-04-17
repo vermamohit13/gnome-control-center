@@ -97,7 +97,7 @@ add_attribute(
 				 "<b>\t %s:</b> = %s\n",
 				 attr_name,
 				 attr_val);
-    add_option(data.service, attr_name, (gchar*)attr_val); /*PRO*/
+    add_option (data.service, attr_name, (gchar*)attr_val); /*PRO*/
 	}
 
 	else
@@ -133,7 +133,7 @@ get_attributes (int     obj_type_enum, // type of object (enum value)
 	if (obj_type_enum == SYSTEM_OBJECT)
 	{
 		operation = IPP_OP_GET_SYSTEM_ATTRIBUTES;
-    add_option(dest, "OBJ_TYPE", "SYSTEM_OBJECT");
+    add_option (dest, "OBJ_TYPE", "SYSTEM_OBJECT");
 		uri_tag = "system-uri";
 		resource = "/ipp/system";
 	}
@@ -184,7 +184,7 @@ get_attributes (int     obj_type_enum, // type of object (enum value)
 		add_attribute ("printer-dns-sd-name", IPP_TAG_NAME, data);
 		add_attribute ("printer-location", IPP_TAG_TEXT, data);
 		add_attribute ("printer-geo-location", IPP_TAG_URI, data);
-		add_attribute ("web-interface", IPP_TAG_URI, data);
+		add_attribute ("printer-more-info", IPP_TAG_URI, data);
 		add_attribute ("printer-supply-info-uri", IPP_TAG_URI, data);
 	}
 
@@ -280,12 +280,14 @@ get_services (AvahiData* data)
 
         data->uri = g_strdup(uri);
     }
+
     add_option (dest, "device-uri", data->uri);
+    
     if ((data->uri != NULL) && (data->objAttr == NULL))
     {
 
         http_t *http = httpConnect2(data->hostname, data->port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_ALWAYS, 1, 0, NULL);
-        add_option(dest, "web-interface", g_strdup_printf("http://%s:%d", data->hostname, data->port));
+        add_option (dest, "printer-more-info", g_strdup_printf("http://%s:%d", data->hostname, data->port));
         gchar buff[OBJ_ATTR_SIZE];
 
         /* Get System Attributes */
@@ -625,7 +627,10 @@ cupsGetIPPDevices (cups_dest_t** dests,
     /* Max no of devices is 100 */
     cups_dest_t *new_dest = g_new0 (cups_dest_t, 100);
     for (int i = 0; i < num_of_dests; i++)
-      new_dest[i] = (*dests)[i];
+      {
+        g_message ("%s",(*dests)[i].name);
+        new_dest[i] = (*dests)[i];
+      }
 
     for (int i = 0; i < no_sys_objs; i++)
     {
