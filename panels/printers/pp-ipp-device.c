@@ -17,9 +17,9 @@
 #define AVAHI_SERVICE_RESOLVER_IFACE "org.freedesktop.Avahi.ServiceResolver"
 
 
-
-int compare_services (gconstpointer      data1,
-                      gconstpointer      data2)
+static int 
+compare_services (gconstpointer      data1,
+                  gconstpointer      data2)
 {
         AvahiData *data_1 = (AvahiData*)data1;
         AvahiData *data_2 = (AvahiData*)data2;
@@ -27,7 +27,7 @@ int compare_services (gconstpointer      data1,
         return g_strcmp0 (data_1->name,data_2->name);
 }
 
-int
+static int
 on_timeout_cb (gpointer      user_data)
 {
         ((Avahi*)(user_data))->done = 1;
@@ -116,7 +116,7 @@ add_attribute(
  * 			0 if failure
  */
 
-int 
+static int 
 get_attributes (int     obj_type_enum, // type of object (enum value)
               	http_t  *http,	   // http connection
               	gchar   *uri,		   // object uri
@@ -191,7 +191,7 @@ get_attributes (int     obj_type_enum, // type of object (enum value)
 	return 1;
 }
 
-int
+static int
 get_printers (http_t            *http,			   // http connection
 				      AvahiData         *so,	   // system object (on which get_printers is to be run)
 				      int               buff_size)			   // size of object attribute field
@@ -628,7 +628,6 @@ cupsGetIPPDevices (cups_dest_t** dests,
     cups_dest_t *new_dest = g_new0 (cups_dest_t, 100);
     for (int i = 0; i < num_of_dests; i++)
       {
-        g_message ("%s",(*dests)[i].name);
         new_dest[i] = (*dests)[i];
       }
 
