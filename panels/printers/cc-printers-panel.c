@@ -1167,30 +1167,6 @@ filter_function (GtkListBoxRow *row,
   return retval;
 }
 
-static gint
-sort_function (GtkListBoxRow *row1,
-               GtkListBoxRow *row2,
-               gpointer       user_data)
-{
-  PpPrinterEntry *entry1 = PP_PRINTER_ENTRY (row1);
-  PpPrinterEntry *entry2 = PP_PRINTER_ENTRY (row2);
-
-  if (pp_printer_entry_get_name (entry1) != NULL)
-    {
-      if (pp_printer_entry_get_name (entry2) != NULL)
-        return g_ascii_strcasecmp (pp_printer_entry_get_name (entry1), pp_printer_entry_get_name (entry2));
-      else
-        return 1;
-    }
-  else
-    {
-      if (pp_printer_entry_get_name (entry2) != NULL)
-        return -1;
-      else
-        return 0;
-    }
-}
-
 static void
 cc_printers_panel_init (CcPrintersPanel *self)
 {
@@ -1265,10 +1241,6 @@ cc_printers_panel_init (CcPrintersPanel *self)
                             "search-changed",
                             G_CALLBACK (gtk_list_box_invalidate_filter),
                             widget);
-  gtk_list_box_set_sort_func (GTK_LIST_BOX (widget),
-                              sort_function,
-                              NULL,
-                              NULL);
 
   self->lockdown_settings = g_settings_new ("org.gnome.desktop.lockdown");
   if (self->lockdown_settings)
