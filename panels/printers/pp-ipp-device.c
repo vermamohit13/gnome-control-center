@@ -646,7 +646,8 @@ cupsGetIPPDevices (cups_dest_t** dests,
     Avahi*              printer_device_backend;
     AvahiData*          sys_obj;
     GList*              sys_objs;
-    GHashTable*         service_entries;
+    GHashTable         *service_entries,
+                       *unique_entries;
 
     printer_device_backend = g_new0 (Avahi, 1);
     printer_device_backend->system_objects = NULL; 
@@ -656,7 +657,8 @@ cupsGetIPPDevices (cups_dest_t** dests,
     avahi_create_browsers (printer_device_backend);
     
     service_entries = g_hash_table_new (g_str_hash, comp_entries);
-
+    unique_entries = g_hash_table_new(g_str_hash, comp_entries);
+   
     sys_objs = printer_device_backend->system_objects;
     no_sys_objs = g_list_length (sys_objs);
 
@@ -676,14 +678,20 @@ cupsGetIPPDevices (cups_dest_t** dests,
           {
               temp_dest = *(cups_dest_t*)(g_list_nth_data (sys_obj->services, j));
               
+              if (g_hash_table_contains(unique_entries, temp_dest.name))
+                continue;
 
               if (g_hash_table_contains (service_entries, temp_dest.name))
               {
                 add_interface_data (&new_dest[it++], &temp_dest);
+                g_hash_table_insert(unique_entries, temp_dest.name, GINT_TO_POINTER(it-1));
                 g_hash_table_remove (service_entries, temp_dest.name);
               }
               else
-                new_dest[it++] = temp_dest;
+              {
+                  new_dest[it++] = temp_dest;
+                  g_hash_table_insert(unique_entries, temp_dest.name, GINT_TO_POINTER(it));
+              }
           }
     }
 
