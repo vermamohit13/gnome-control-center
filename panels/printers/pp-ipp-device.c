@@ -488,8 +488,8 @@ avahi_service_browser_signal_handler (GDBusConnection *connection,
                  GList *iter = g_list_find_custom (backend->system_objects, name , (GCompareFunc) compare_services);
                 if (iter != NULL)
                   {
-                    g_free (iter->data);
                     backend->system_objects = g_list_delete_link (backend->system_objects, iter);
+                    g_free (iter->data);
                   }
               }
 
@@ -607,40 +607,95 @@ avahi_create_browsers (gpointer    user_data)
         return;
 }
 
+static gboolean
+comp_entries (gconstpointer a,
+              gconstpointer b)
+{
+    char *entry_1 = (char*)a;
+    char *entry_2 = (char*)b;
+
+    return !g_strcmp0 (entry_1, entry_2);
+}
+
+static void
+add_interface_data (cups_dest_t* dest,
+                    cups_dest_t* src)
+{
+  src->instance = dest->instance;
+  src->is_default = dest->is_default;
+
+    for (int i = 0; i < dest->num_options; i++)
+      add_option (src, dest->options[i].name, dest->options[i].value);
+
+    add_option (src, "sanitize-name", "TRUE");
+    
+    *dest = *src;
+    
+    return;
+}
 
 int 
 cupsGetIPPDevices (cups_dest_t** dests,
                    int          num_of_dests)
 {
-    Avahi *printer_device_backend = g_new0 (Avahi, 1);
+    int                 no_sys_objs,
+                        no_services,
+                        it;
+    cups_dest_t*        new_dest,
+                        temp_dest;
+    Avahi*              printer_device_backend;
+    AvahiData*          sys_obj;
+    GList*              sys_objs;
+    GHashTable*         service_entries;
+
+    printer_device_backend = g_new0 (Avahi, 1);
     printer_device_backend->system_objects = NULL; 
     printer_device_backend->avahi_cancellable = g_cancellable_new ();
     printer_device_backend->dbus_connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, printer_device_backend->avahi_cancellable, NULL);
 
-    
     avahi_create_browsers (printer_device_backend);
     
+    service_entries = g_hash_table_new (g_str_hash, comp_entries);
 
-    GList* sys_objs = printer_device_backend->system_objects;
-    int no_sys_objs = g_list_length(sys_objs);
+    sys_objs = printer_device_backend->system_objects;
+    no_sys_objs = g_list_length (sys_objs);
 
     /* Max no of devices is 100 */
-    cups_dest_t *new_dest = g_new0 (cups_dest_t, 100);
+    new_dest = g_new0 (cups_dest_t, 100);
+    it = 0;
+
     for (int i = 0; i < num_of_dests; i++)
-      {
-        new_dest[i] = (*dests)[i];
-      }
+        g_hash_table_insert (service_entries, (*dests)[i].name, GINT_TO_POINTER (i));
 
     for (int i = 0; i < no_sys_objs; i++)
     {
-        AvahiData* sys_obj = g_list_nth_data(sys_objs, i);
-        int no_services = g_list_length (sys_obj->services);
+        sys_obj = g_list_nth_data (sys_objs, i);
+        no_services = g_list_length (sys_obj->services);
 
         for (int j = 0; j < no_services; j++)
-            new_dest[num_of_dests++] = *(cups_dest_t*)(g_list_nth_data(sys_obj->services, j)); 
+          {
+              temp_dest = *(cups_dest_t*)(g_list_nth_data (sys_obj->services, j));
+              
+
+              if (g_hash_table_contains (service_entries, temp_dest.name))
+              {
+                add_interface_data (&new_dest[it++], &temp_dest);
+                g_hash_table_remove (service_entries, temp_dest.name);
+              }
+              else
+                new_dest[it++] = temp_dest;
+          }
+    }
+
+    for (int i = 0; i < num_of_dests; i++)
+    {
+      if (g_hash_table_contains (service_entries, (*dests)[i].name))
+        new_dest[it++] = (*dests)[i];
     }
 
     *dests = new_dest;
+    
+    g_hash_table_destroy (service_entries);
 
-    return num_of_dests;
+    return it;
 }

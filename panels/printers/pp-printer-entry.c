@@ -398,7 +398,9 @@ on_click_web_interface (GtkButton      *button,
     // gtk_show_uri_on_window (self, self->web_interface, 0, NULL);
     // gtk_window_present (GTK_WINDOW (self));
     // gtk_show_uri_with_window (NULL, self->web_interface, gtk_get_current_event_time(), NULL);
+    return;
 }
+
 static void
 on_show_printer_details_dialog (GtkButton      *button,
                                 PpPrinterEntry *self)
@@ -699,6 +701,7 @@ pp_printer_entry_update (PpPrinterEntry *self,
   const gchar      *printer_uri = NULL;
   const gchar      *web_interface = NULL;
   const gchar      *dev_type = NULL;
+  const gboolean   *sanitize_name = FALSE;
   const gchar      *device_uri = NULL;
   const gchar      *location = NULL;
   g_autofree gchar *printer_icon_name = NULL;
@@ -784,6 +787,8 @@ pp_printer_entry_update (PpPrinterEntry *self,
         web_interface = printer.options[i].value, self->web_interface = web_interface;
       else if (g_strcmp0 (printer.options[i].name, "OBJ_TYPE") == 0)
         dev_type = printer.options[i].value;
+      else if (g_strcmp0 (printer.options[i].name, "sanitize-name") == 0)
+        sanitize_name = TRUE;
       else if (g_strcmp0 (printer.options[i].name, "printer-uri-supported") == 0)
         printer_uri = printer.options[i].value;
       else if (g_strcmp0 (printer.options[i].name, "printer-type") == 0)
@@ -936,7 +941,7 @@ pp_printer_entry_update (PpPrinterEntry *self,
   gtk_check_button_set_active (self->printer_default_checkbutton, printer.is_default);
   g_signal_handlers_unblock_by_func (self->printer_default_checkbutton, set_as_default_printer, self);
 
-  if (dev_type == NULL)
+  if (dev_type == NULL || sanitize_name == TRUE)
     self->printer_make_and_model = sanitize_printer_model (printer_make_and_model);
   else
     {
