@@ -328,7 +328,7 @@ get_services (AvahiData* data)
     }
 }
 
-gboolean
+static gboolean
 avahi_txt_get_key_value_pair (const gchar  *entry,
                               gchar       **key,
                               gchar       **value)
