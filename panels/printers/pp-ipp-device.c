@@ -288,7 +288,11 @@ get_services (AvahiData* data)
     {
 
         http_t *http = httpConnect2(data->hostname, data->port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_ALWAYS, 1, 0, NULL);
-        add_option (dest, "printer-more-info", g_strdup_printf("http://%s:%d", data->hostname, data->port));
+        if (data->admin_url != NULL)
+          add_option (dest, "printer-more-info", data->admin_url);
+        else        
+          add_option (dest, "printer-more-info", g_strdup_printf("http://%s:%d", data->hostname, data->port));
+        
         gchar buff[OBJ_ATTR_SIZE];
 
         /* Get System Attributes */
@@ -314,11 +318,11 @@ get_services (AvahiData* data)
 
         if (get_printers (http, data, OBJ_ATTR_SIZE))
         {
-            printf("Get-Printers: Success\n");
+            // printf("Get-Printers: Success\n");
         }
         else
         {
-            printf("Error: Get-Printers: Failed\n");
+            // printf("Error: Get-Printers: Failed\n");
         }
 
     }
@@ -375,7 +379,7 @@ avahi_service_resolver_cb (GVariant*     output,
         int                      interface;
         int                      protocol;
         int                      aprotocol;
-        int                      i, j;
+        int                      i;
 
 
         backend = user_data;
@@ -451,7 +455,11 @@ avahi_service_resolver_cb (GVariant*     output,
                       if (*value != '\0')
                         data->UUID = g_strdup (value);
                     }
-
+                  else if (g_strcmp0 (key, "adminurl") == 0)
+                    {
+                      if (*value != '\0')
+                        data->admin_url = g_strdup (value);
+                    }
                   g_clear_pointer (&key, g_free);
                   g_clear_pointer (&value, g_free);
                   g_free (tmp);
@@ -464,7 +472,6 @@ avahi_service_resolver_cb (GVariant*     output,
                 
                 data->address = g_strdup (address);
                 data->hostname = g_strdup (hostname);
-                g_message ("%s\n", name);
                 data->port = port;
                 data->family = protocol;
                 data->name = g_strdup (name);

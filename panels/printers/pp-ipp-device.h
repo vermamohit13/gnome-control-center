@@ -72,6 +72,7 @@ typedef struct
         gchar                *domain;
         gchar                *UUID;
         gchar                *object_type;
+        gchar                *admin_url;
         gchar                *uri;
         gchar                *objAttr;
         gint64               printer_type,
