@@ -24,6 +24,7 @@
 #include <glib/gi18n.h>
 #include <gio/gio.h>
 
+#include "glibconfig.h"
 #include "pp-cups.h"
 
 typedef enum
@@ -47,9 +48,10 @@ typedef struct add_attribute_data
 
 typedef struct 
 {
-        char                *avahi_service_browser_paths[2];
+        char                *avahi_service_browser_paths[4];
         guint                avahi_service_browser_subscription_id;
-        guint                avahi_service_browser_subscription_ids[2];
+        guint                avahi_service_browser_subscription_ids[4];
+        guint                avahi_service_browser_subscription_id_ind;           
         guint                unsubscribe_general_subscription_id;
         guint                done;
         GDBusConnection     *dbus_connection;
@@ -72,6 +74,10 @@ typedef struct
         gchar                *object_type;
         gchar                *uri;
         gchar                *objAttr;
+        gint64               printer_type,
+                             printer_state;
+        gboolean             got_printer_state,
+                             got_printer_type;
         int                  port;
         int                  family;
 

@@ -46,6 +46,7 @@ struct _PpPrinterEntry
   GtkListBoxRow parent;
 
   gchar    *printer_name;
+  gchar    *UUID;
   gboolean  is_accepting_jobs;
   gchar    *printer_make_and_model;
   gchar    *printer_location;
@@ -682,6 +683,13 @@ pp_printer_entry_get_name (PpPrinterEntry *self)
   return self->printer_name;
 }
 
+const gchar   *
+pp_printer_entry_get_UUID (PpPrinterEntry *self)
+{
+  g_return_val_if_fail (PP_IS_PRINTER_ENTRY (self), NULL);
+  return self->UUID;
+}
+
 const gchar *
 pp_printer_entry_get_location (PpPrinterEntry *self)
 {
@@ -706,6 +714,7 @@ pp_printer_entry_update (PpPrinterEntry *self,
   const gchar      *location = NULL;
   g_autofree gchar *printer_icon_name = NULL;
   const gchar      *printer_make_and_model = NULL;
+  const gchar      *UUID = NULL;
   const gchar      *reason = NULL;
   gchar           **printer_reasons = NULL;
   g_autofree gchar *status = NULL;
@@ -797,6 +806,8 @@ pp_printer_entry_update (PpPrinterEntry *self,
         location = printer.options[i].value;
       else if (g_strcmp0 (printer.options[i].name, "printer-state-reasons") == 0)
         reason = printer.options[i].value;
+      else if (g_strcmp0 (printer.options[i].name, "UUID") == 0)
+        self->UUID = printer.options[i].value;        
       else if (g_strcmp0 (printer.options[i].name, "marker-names") == 0)
         {
           g_free (self->inklevel->marker_names);

@@ -244,6 +244,7 @@ get_printers (http_t            *http,			   // http connection
 
 		cups_dest_t *dest = g_new0 (cups_dest_t, 1);
     dest->options = g_new0 (cups_option_t, 20);
+    add_option (dest, "UUID", so->UUID);
 
 		dest->name = g_strdup (printer_name);
     add_option (dest, "device-uri", printer_uri);
@@ -280,7 +281,7 @@ get_services (AvahiData* data)
 
         data->uri = g_strdup(uri);
     }
-
+    add_option (dest, "UUID", data->UUID);
     add_option (dest, "device-uri", data->uri);
     
     if ((data->uri != NULL) && (data->objAttr == NULL))
@@ -313,14 +314,40 @@ get_services (AvahiData* data)
 
         if (get_printers (http, data, OBJ_ATTR_SIZE))
         {
-            // printf("Get-Printers: Success\n");
+            printf("Get-Printers: Success\n");
         }
         else
         {
-            // printf("Error: Get-Printers: Failed\n");
+            printf("Error: Get-Printers: Failed\n");
         }
 
     }
+}
+
+gboolean
+avahi_txt_get_key_value_pair (const gchar  *entry,
+                              gchar       **key,
+                              gchar       **value)
+{
+  const gchar *equal_sign;
+
+  *key = NULL;
+  *value = NULL;
+
+  if (entry != NULL)
+    {
+      equal_sign = strstr (entry, "=");
+
+      if (equal_sign != NULL)
+        {
+          *key = g_strndup (entry, equal_sign - entry);
+          *value = g_strdup (equal_sign + 1);
+
+          return TRUE;
+        }
+    }
+
+  return FALSE;
 }
 
 static void
@@ -334,14 +361,22 @@ avahi_service_resolver_cb (GVariant*     output,
         const char              *type;
         const char              *domain;
         const char              *address;
-        GVariant                *txt;
+        char                    *key;
+        char                    *value;
+        char                    *tmp;
+        char                    *endptr;
+        GVariant                *txt,
+                                *child;
         guint32                  flags;
         guint16                  port;
         GError                  *error = NULL;
         GList                   *iter;
+        gsize                    length; 
         int                      interface;
         int                      protocol;
         int                      aprotocol;
+        int                      i, j;
+
 
         backend = user_data;
         
@@ -362,10 +397,74 @@ avahi_service_resolver_cb (GVariant*     output,
                                &flags);
 
                 data = g_new0 (AvahiData, 1);
+                
+                if (g_strcmp0 (type, "_ipps-system._tcp") == 0 ||
+                    g_strcmp0 (type, "_ipps-system._tcp") == 0)
+                  {
+                       data->object_type = g_strdup("SYSTEM_OBJECT");
+                  } 
+                else
+                  {
+                      data->object_type = g_strdup("PRINTER_OBJECT");
+                  }
 
-                data->object_type = g_strdup("SYSTEM_OBJECT");
+            for (i = 0; i < g_variant_n_children (txt); i++)
+            {
+              child = g_variant_get_child_value (txt, i);
+
+              length = g_variant_get_size (child);
+              if (length > 0)
+                {
+                  tmp = g_strndup (g_variant_get_data (child), length);
+                  g_variant_unref (child);
+
+                  if (!avahi_txt_get_key_value_pair (tmp, &key, &value))
+                    {
+                      g_free (tmp);
+                      continue;
+                    }
+
+                  if (g_strcmp0 (key, "rp") == 0)
+                    {
+                      data->resource_path = g_strdup (value);
+                    }
+                  else if (g_strcmp0 (key, "note") == 0)
+                    {
+                      data->location = g_strdup (value);
+                    }
+                  else if (g_strcmp0 (key, "printer-type") == 0)
+                    {
+                      endptr = NULL;
+                      data->printer_type = g_ascii_strtoull (value, &endptr, 16);
+                      if (data->printer_type != 0 || endptr != value)
+                        data->got_printer_type = TRUE;
+                    }
+                  else if (g_strcmp0 (key, "printer-state") == 0)
+                    {
+                      endptr = NULL;
+                      data->printer_state = g_ascii_strtoull (value, &endptr, 10);
+                      if (data->printer_state != 0 || endptr != value)
+                        data->got_printer_state = TRUE;
+                    }
+                  else if (g_strcmp0 (key, "UUID") == 0)
+                    {
+                      if (*value != '\0')
+                        data->UUID = g_strdup (value);
+                    }
+
+                  g_clear_pointer (&key, g_free);
+                  g_clear_pointer (&value, g_free);
+                  g_free (tmp);
+                }
+              else
+                {
+                  g_variant_unref (child);
+                }
+            }
+                
                 data->address = g_strdup (address);
                 data->hostname = g_strdup (hostname);
+                g_message ("%s\n", name);
                 data->port = port;
                 data->family = protocol;
                 data->name = g_strdup (name);
@@ -450,7 +549,32 @@ avahi_service_browser_signal_handler (GDBusConnection *connection,
                            &domain,
                            &flags);
 
-            if (g_strcmp0 (type, "_ipps-system._tcp") == 0)
+            if (g_strcmp0 (type, "_ipps-system._tcp") == 0 ||
+                g_strcmp0 (type, "_ipp-system._tcp") == 0)
+              {
+                GVariant *output = g_dbus_connection_call_sync (backend->dbus_connection,
+                                        AVAHI_BUS,
+                                        "/",
+                                        AVAHI_SERVER_IFACE,
+                                        "ResolveService",
+                                        g_variant_new ("(iisssiu)",
+                                                       interface,
+                                                       protocol,
+                                                       name,
+                                                       type,
+                                                       domain,
+                                                       AVAHI_PROTO_UNSPEC,
+                                                       0),
+                                        G_VARIANT_TYPE ("(iissssisqaayu)"),
+                                        G_DBUS_CALL_FLAGS_NONE,
+                                        -1,
+                                        backend->avahi_cancellable,
+                                        NULL);
+              avahi_service_resolver_cb (output, backend);
+
+              }
+            else if (g_strcmp0 (type, "_ipps._tcp") == 0 ||
+                     g_strcmp0 (type, "_ipp._tcp") == 0)
               {
                 GVariant *output = g_dbus_connection_call_sync (backend->dbus_connection,
                                         AVAHI_BUS,
@@ -472,6 +596,7 @@ avahi_service_browser_signal_handler (GDBusConnection *connection,
                                         NULL);
               avahi_service_resolver_cb (output, backend);
               }
+
           }
         else if (g_strcmp0 (signal_name, "ItemRemove") == 0)
           {
@@ -483,7 +608,10 @@ avahi_service_browser_signal_handler (GDBusConnection *connection,
                            &domain,
                            &flags);
 
-            if (g_strcmp0 (type, "_ipps-system._tcp") == 0)
+            if (g_strcmp0 (type, "_ipps-system._tcp") == 0 || 
+                g_strcmp0 (type, "_ipp-system._tcp") == 0  ||
+                g_strcmp0 (type, "_ipps._tcp") == 0        ||
+                g_strcmp0 (type, "_ipps._tcp") == 0)
               {
                  GList *iter = g_list_find_custom (backend->system_objects, name , (GCompareFunc) compare_services);
                 if (iter != NULL)
@@ -515,7 +643,7 @@ avahi_service_browser_new_cb (GVariant*     output,
         
         if (output)
           {
-            i = printer_device_backend->avahi_service_browser_paths[0] ? 1 : 0;
+            i = printer_device_backend->avahi_service_browser_subscription_id_ind;
 
             g_variant_get (output, "(o)", &printer_device_backend->avahi_service_browser_paths[i]);
             printer_device_backend->avahi_service_browser_subscription_ids[i] =
@@ -530,9 +658,12 @@ avahi_service_browser_new_cb (GVariant*     output,
                                                   printer_device_backend,
                                                   NULL);
 
-           
+            printer_device_backend->avahi_service_browser_subscription_id_ind++;
+
             if (printer_device_backend->avahi_service_browser_paths[0] &&
                 printer_device_backend->avahi_service_browser_paths[1] &&
+                printer_device_backend->avahi_service_browser_paths[2] &&
+                printer_device_backend->avahi_service_browser_paths[3] &&
                 printer_device_backend->avahi_service_browser_subscription_id > 0)
               {
                 
@@ -595,9 +726,68 @@ avahi_create_browsers (gpointer    user_data)
                                 -1,
                                 printer_device_backend->avahi_cancellable,
                                 NULL);
-
         
+        GVariant* output_1 = g_dbus_connection_call_sync (printer_device_backend->dbus_connection,
+                                AVAHI_BUS,
+                                "/",
+                                AVAHI_SERVER_IFACE,
+                                "ServiceBrowserNew",
+                                g_variant_new ("(iissu)",
+                                               AVAHI_IF_UNSPEC,
+                                               AVAHI_PROTO_UNSPEC,
+                                               "_ipp-system._tcp",
+                                               "",
+                                               0),
+                                G_VARIANT_TYPE ("(o)"),
+                                G_DBUS_CALL_FLAGS_NONE,
+                                -1,
+                                printer_device_backend->avahi_cancellable,
+                                NULL);
+        
+        /*
+         * Create service browser for _ipps._tcp services.
+         */
+        GVariant* output_2 = g_dbus_connection_call_sync (printer_device_backend->dbus_connection,
+                                AVAHI_BUS,
+                                "/",
+                                AVAHI_SERVER_IFACE,
+                                "ServiceBrowserNew",
+                                g_variant_new ("(iissu)",
+                                               AVAHI_IF_UNSPEC,
+                                               AVAHI_PROTO_UNSPEC,
+                                               "_ipps._tcp",
+                                               "",
+                                               0),
+                                G_VARIANT_TYPE ("(o)"),
+                                G_DBUS_CALL_FLAGS_NONE,
+                                -1,
+                                printer_device_backend->avahi_cancellable,
+                                NULL);
+
+        /*
+         * Create service browser for _ipp._tcp services.
+         */
+        GVariant* output_3 = g_dbus_connection_call_sync (printer_device_backend->dbus_connection,
+                                AVAHI_BUS,
+                                "/",
+                                AVAHI_SERVER_IFACE,
+                                "ServiceBrowserNew",
+                                g_variant_new ("(iissu)",
+                                               AVAHI_IF_UNSPEC,
+                                               AVAHI_PROTO_UNSPEC,
+                                               "_ipp._tcp",
+                                               "",
+                                               0),
+                                G_VARIANT_TYPE ("(o)"),
+                                G_DBUS_CALL_FLAGS_NONE,
+                                -1,
+                                printer_device_backend->avahi_cancellable,
+                                NULL);
+
         avahi_service_browser_new_cb (output, user_data);
+        avahi_service_browser_new_cb (output_1, user_data);
+        avahi_service_browser_new_cb (output_2, user_data);
+        avahi_service_browser_new_cb (output_3, user_data);
 
         while (printer_device_backend->done == 0)
                 { 
