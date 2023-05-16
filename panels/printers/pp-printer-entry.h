@@ -30,6 +30,8 @@ PpPrinterEntry *pp_printer_entry_new  (cups_dest_t printer,
 
 const gchar    *pp_printer_entry_get_name (PpPrinterEntry *self);
 
+const gchar    *pp_printer_entry_get_hostname (PpPrinterEntry *self);
+
 const gchar    *pp_printer_entry_get_UUID (PpPrinterEntry *self);
 
 const gchar    *pp_printer_entry_get_location (PpPrinterEntry *self);

@@ -244,6 +244,7 @@ get_printers (http_t            *http,			   // http connection
    
     if (get_attributes(PRINTER_OBJECT, http, printer_uri, buff, buff_size, dest))
 		{
+      add_option(dest, "hostname", so->hostname);
 			so->services = g_list_append(so->services, dest);
 
 			// printf("Get-Printer-attributes: Success\n");
@@ -274,9 +275,11 @@ get_services (AvahiData* data)
 
         data->uri = g_strdup(uri);
     }
+    
     add_option (dest, "UUID", data->UUID);
     add_option (dest, "device-uri", data->uri);
-    
+    add_option (dest, "hostname", data->hostname);
+
     if ((data->uri != NULL) && (data->objAttr == NULL))
     {
 
@@ -364,6 +367,7 @@ add_device (AvahiData* data)
 
 		add_option (dest, "printer-location", data->location);
     add_option(dest, "hostname", data->hostname);
+    add_option(dest, "OBJ_TYPE", "PRINTER_OBJECT");
     return;
 }
 
@@ -738,7 +742,7 @@ add_interface_data (cups_dest_t* dest,
     for (int i = 0; i < dest->num_options; i++)
       add_option (src, dest->options[i].name, dest->options[i].value);
 
-    add_option (src, "sanitize-name", "TRUE");
+    // add_option (src, "sanitize-name", "TRUE");
     
     *dest = *src;
     
@@ -783,7 +787,7 @@ cupsGetIPPDevices (cups_dest_t** dests,
     it = 0;
 
     for (int i = 0; i < num_of_dests; i++)
-          g_hash_table_insert (service_entries, (*dests)[i].name, GINT_TO_POINTER (i));
+      g_hash_table_insert (service_entries, (*dests)[i].name, GINT_TO_POINTER (i));
 
     for (int serv_ind = 0; serv_ind < 4; serv_ind++)
     {
@@ -805,7 +809,6 @@ cupsGetIPPDevices (cups_dest_t** dests,
                 if (g_hash_table_contains (service_entries, temp_dest.name))
                 {
                   add_interface_data (&new_dest[it++], &temp_dest);
-                  // add_interface_data (&new_dest[it-1], (*dests)[i]);
                   g_hash_table_insert (unique_entries, temp_dest.name, GINT_TO_POINTER(it-1));
                   g_hash_table_remove (service_entries, temp_dest.name);
                 }

@@ -683,6 +683,13 @@ pp_printer_entry_get_name (PpPrinterEntry *self)
   return self->printer_name;
 }
 
+const gchar *
+pp_printer_entry_get_hostname (PpPrinterEntry *self)
+{
+  g_return_val_if_fail (PP_IS_PRINTER_ENTRY (self), NULL);
+  return self->printer_hostname;
+}
+
 const gchar   *
 pp_printer_entry_get_UUID (PpPrinterEntry *self)
 {
@@ -807,7 +814,9 @@ pp_printer_entry_update (PpPrinterEntry *self,
       else if (g_strcmp0 (printer.options[i].name, "printer-state-reasons") == 0)
         reason = printer.options[i].value;
       else if (g_strcmp0 (printer.options[i].name, "UUID") == 0)
-        self->UUID = printer.options[i].value;        
+        self->UUID = printer.options[i].value;  
+      else if (g_strcmp0 (printer.options[i].name, "hostname") == 0)
+        self->printer_hostname = printer.options[i].value;  
       else if (g_strcmp0 (printer.options[i].name, "marker-names") == 0)
         {
           g_free (self->inklevel->marker_names);
