@@ -48,12 +48,11 @@ typedef struct add_attribute_data
 
 typedef struct 
 {
-        char                *avahi_service_browser_paths[4];
+        char                *avahi_service_browser_path;
         guint                avahi_service_browser_subscription_id;
-        guint                avahi_service_browser_subscription_ids[4];
         guint                avahi_service_browser_subscription_id_ind;           
         guint                unsubscribe_general_subscription_id;
-        guint                done;
+        guint                done,done_1,done_2,done_3,done_4;
         GDBusConnection     *dbus_connection;
         GCancellable        *avahi_cancellable;
         GList               *system_objects;
