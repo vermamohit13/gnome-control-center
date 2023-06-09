@@ -29,6 +29,7 @@ sources = files(
   'pp-new-printer-dialog.c',
   'pp-new-printer.c',
   'pp-options-dialog.c',
+  'pp-app-printer-dialog.c',
   'pp-ppd-option-widget.c',
   'pp-ppd-selection-dialog.c',
   'pp-print-device.c',
@@ -48,6 +49,7 @@ resource_data = files(
   'pp-options-dialog.ui',
   'printer-entry.ui',
   'printers.ui',
+  'app-printer-dialog.ui',
 )
 
 sources += gnome.compile_resources(

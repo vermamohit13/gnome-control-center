@@ -1732,34 +1732,34 @@ new_printer_dialog_response_cb (PpNewPrinterDialog *self,
 
       if (device)
         {
-          acquisition_method = pp_print_device_get_acquisition_method (device);
-          if (acquisition_method == ACQUISITION_METHOD_SAMBA ||
-              acquisition_method == ACQUISITION_METHOD_SAMBA_HOST ||
-              acquisition_method == ACQUISITION_METHOD_JETDIRECT ||
-              acquisition_method == ACQUISITION_METHOD_LPD)
-            {
-              self->new_device = pp_print_device_copy (device);
-              self->ppd_selection_dialog =
-                pp_ppd_selection_dialog_new (self->list,
-                                             NULL,
-                                             ppd_selection_cb,
-                                             self);
+          // acquisition_method = pp_print_device_get_acquisition_method (device);
+          // if (acquisition_method == ACQUISITION_METHOD_SAMBA ||
+          //     acquisition_method == ACQUISITION_METHOD_SAMBA_HOST ||
+          //     acquisition_method == ACQUISITION_METHOD_JETDIRECT ||
+          //     acquisition_method == ACQUISITION_METHOD_LPD)
+          //   {
+          //     self->new_device = pp_print_device_copy (device);
+          //     self->ppd_selection_dialog =
+          //       pp_ppd_selection_dialog_new (self->list,
+          //                                    NULL,
+          //                                    ppd_selection_cb,
+          //                                    self);
 
-              gtk_window_set_transient_for (GTK_WINDOW (self->ppd_selection_dialog),
-                                            GTK_WINDOW (self));
-
-              /* New device will be set at return from ppd selection */
-              gtk_widget_show (GTK_WIDGET (self->ppd_selection_dialog));
-            }
-          else
-            {
-              self->new_device = pp_print_device_copy (device);
-              self->user_callback (GTK_DIALOG (self), GTK_RESPONSE_OK, self->user_data);
-            }
-          // self->app_printer_dialog = pp_app_printer_dialog_new (device);
-          // gtk_window_set_transient_for (GTK_WINDOW (self->app_printer_dialog),
+          //     gtk_window_set_transient_for (GTK_WINDOW (self->ppd_selection_dialog),
           //                                   GTK_WINDOW (self));
-          // gtk_widget_show ( GTK_WIDGET (self->app_printer_dialog));
+
+          //     /* New device will be set at return from ppd selection */
+          //     gtk_widget_show (GTK_WIDGET (self->ppd_selection_dialog));
+          //   }
+          // else
+          //   {
+          //     self->new_device = pp_print_device_copy (device);
+          //     self->user_callback (GTK_DIALOG (self), GTK_RESPONSE_OK, self->user_data);
+          //   }
+          self->app_printer_dialog = pp_app_printer_dialog_new (device);
+          gtk_window_set_transient_for (GTK_WINDOW (self->app_printer_dialog),
+                                            GTK_WINDOW (self));
+          gtk_widget_show ( GTK_WIDGET (self->app_printer_dialog));
         }
     }
   else
