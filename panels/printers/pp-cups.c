@@ -71,6 +71,26 @@ _pp_cups_get_dests_thread (GTask        *task,
 
   dests = g_new0 (PpCupsDests, 1);
   dests->num_of_dests = cupsGetDests (&dests->dests);
+
+  if (g_task_set_return_on_cancel (task, FALSE))
+    {
+      g_task_return_pointer (task, dests, (GDestroyNotify) pp_cups_dests_free);
+    }
+  else
+    {
+      pp_cups_dests_free (dests);
+    }
+}
+
+static void
+_pp_cups_get_new_dests_thread (GTask        *task,
+                           gpointer     *object,
+                           gpointer      task_data,
+                           GCancellable *cancellable)
+{
+  PpCupsDests *dests;
+
+  dests = g_new0 (PpCupsDests, 1);
   dests->num_of_dests = cupsGetIPPDevices (&dests->dests, dests->num_of_dests);
 
   if (g_task_set_return_on_cancel (task, FALSE))
@@ -94,6 +114,19 @@ pp_cups_get_dests_async (PpCups              *self,
   task = g_task_new (self, cancellable, callback, user_data);
   g_task_set_return_on_cancel (task, TRUE);
   g_task_run_in_thread (task, (GTaskThreadFunc) _pp_cups_get_dests_thread);
+}
+
+void
+pp_cups_get_new_dests_async (PpCups              *self,
+                             GCancellable        *cancellable,
+                             GAsyncReadyCallback  callback,
+                             gpointer             user_data)
+{
+  g_autoptr(GTask) task = NULL;
+
+  task = g_task_new (self, cancellable, callback, user_data);
+  g_task_set_return_on_cancel (task, TRUE);
+  g_task_run_in_thread (task, (GTaskThreadFunc) _pp_cups_get_new_dests_thread);
 }
 
 PpCupsDests *

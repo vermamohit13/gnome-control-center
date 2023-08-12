@@ -1642,7 +1642,7 @@ populate_devices_list (PpNewPrinterDialog *self)
 
   cups = pp_cups_new ();
   pp_cups_get_dests_async (cups, self->cancellable, cups_get_dests_cb, self);
-
+  pp_cups_get_new_dests_async (cups, self->cancellable, cups_get_dests_cb, self);
   self->samba_searching = TRUE;
   update_dialog_state (self);
 

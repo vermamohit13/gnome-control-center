@@ -372,8 +372,12 @@ add_device (AvahiData* data)
 }
 
 static void
-avahi_service_resolver_cb (GVariant*     output,
+// avahi_service_resolver_cb (GVariant*     output,
+//                            gpointer      user_data)
+avahi_service_resolver_cb (GObject      *source_object,
+                           GAsyncResult *res,
                            gpointer      user_data)
+
 {
         AvahiData               *data;
         Avahi                   *backend;
@@ -387,7 +391,8 @@ avahi_service_resolver_cb (GVariant*     output,
         char                    *tmp;
         char                    *endptr;
         GVariant                *txt,
-                                *child;
+                                *child,
+                                *output;
         guint32                  flags;
         guint16                  port;
         GError                  *error = NULL;
@@ -400,7 +405,10 @@ avahi_service_resolver_cb (GVariant*     output,
 
 
         backend = user_data;
-        
+        output = g_dbus_connection_call_finish (G_DBUS_CONNECTION (source_object),
+                                          res,
+                                          &error);
+
         if (output)
         {
 
@@ -576,26 +584,45 @@ avahi_service_browser_signal_handler (GDBusConnection *connection,
                            &domain,
                            &flags);
 
-                GVariant *output = g_dbus_connection_call_sync (backend->dbus_connection,
-                                        AVAHI_BUS,
-                                        "/",
-                                        AVAHI_SERVER_IFACE,
-                                        "ResolveService",
-                                        g_variant_new ("(iisssiu)",
-                                                       interface,
-                                                       protocol,
-                                                       name,
-                                                       type,
-                                                       domain,
-                                                       AVAHI_PROTO_UNSPEC,
-                                                       0),
-                                        G_VARIANT_TYPE ("(iissssisqaayu)"),
-                                        G_DBUS_CALL_FLAGS_NONE,
-                                        -1,
-                                        backend->avahi_cancellable,
-                                        NULL);
-              avahi_service_resolver_cb (output, backend);
+              //   g_dbus_connection_call_sync (backend->dbus_connection,
+              //                           AVAHI_BUS,
+              //                           "/",
+              //                           AVAHI_SERVER_IFACE,
+              //                           "ResolveService",
+              //                           g_variant_new ("(iisssiu)",
+              //                                          interface,
+              //                                          protocol,
+              //                                          name,
+              //                                          type,
+              //                                          domain,
+              //                                          AVAHI_PROTO_UNSPEC,
+              //                                          0),
+              //                           G_VARIANT_TYPE ("(iissssisqaayu)"),
+              //                           G_DBUS_CALL_FLAGS_NONE,
+              //                           -1,
+              //                           backend->avahi_cancellable,
+              //                           NULL);
+              // avahi_service_resolver_cb (output, backend);
 
+              g_dbus_connection_call (backend->dbus_connection,
+                        AVAHI_BUS,
+                        "/",
+                        AVAHI_SERVER_IFACE,
+                        "ResolveService",
+                        g_variant_new ("(iisssiu)",
+                                       interface,
+                                       protocol,
+                                       name,
+                                       type,
+                                       domain,
+                                       AVAHI_PROTO_UNSPEC,
+                                       0),
+                        G_VARIANT_TYPE ("(iissssisqaayu)"),
+                        G_DBUS_CALL_FLAGS_NONE,
+                        -1,
+                        backend->avahi_cancellable,
+                        avahi_service_resolver_cb,
+                        backend);
               
           }
         else if (g_strcmp0 (signal_name, "ItemRemove") == 0)
@@ -626,12 +653,20 @@ avahi_service_browser_signal_handler (GDBusConnection *connection,
 }
 
 static void
-avahi_service_browser_new_cb (GVariant*     output,
-                              gpointer      user_data)
+// avahi_service_browser_new_cb (GVariant*     output,
+//                               gpointer      user_data)
+avahi_service_browser_new_cb (GObject           *source_object,
+                              GAsyncResult      *res,
+                              gpointer           user_data)
 {
         Avahi               *printer_device_backend;
         GError              *error = NULL;
-        
+        GVariant            *output = NULL;
+
+        output = g_dbus_connection_call_finish (G_DBUS_CONNECTION (source_object),
+                                          res,
+                                          &error);
+
         printer_device_backend = user_data;
         
         if (output)
@@ -694,7 +729,25 @@ avahi_create_browsers (gpointer    user_data,
         /*
          * Create service browser for services type.
          */
-        GVariant* output = g_dbus_connection_call_sync (printer_device_backend->dbus_connection,
+        // g_dbus_connection_call_sync (printer_device_backend->dbus_connection,
+        //                         AVAHI_BUS,
+        //                         "/",
+        //                         AVAHI_SERVER_IFACE,
+        //                         "ServiceBrowserNew",
+        //                         g_variant_new ("(iissu)",
+        //                                        AVAHI_IF_UNSPEC,
+        //                                        AVAHI_PROTO_UNSPEC,
+        //                                        service_type,
+        //                                        "",
+        //                                        0),
+        //                         G_VARIANT_TYPE ("(o)"),
+        //                         G_DBUS_CALL_FLAGS_NONE,
+        //                         -1,
+        //                         printer_device_backend->avahi_cancellable,
+        //                         NULL);
+
+        // avahi_service_browser_new_cb (output, user_data);
+        g_dbus_connection_call (printer_device_backend->dbus_connection,
                                 AVAHI_BUS,
                                 "/",
                                 AVAHI_SERVER_IFACE,
@@ -709,15 +762,15 @@ avahi_create_browsers (gpointer    user_data,
                                 G_DBUS_CALL_FLAGS_NONE,
                                 -1,
                                 printer_device_backend->avahi_cancellable,
-                                NULL);
+                                avahi_service_browser_new_cb,
+                                user_data);
         
   
-        avahi_service_browser_new_cb (output, user_data);
 
-        while (printer_device_backend->done == 0)
-                { 
-                  g_main_context_iteration (NULL, FALSE);
-                }
+        // while (printer_device_backend->done == 0)
+        //         { 
+        //           g_main_context_iteration (NULL, FALSE);
+        //         }
          
         return;
 }

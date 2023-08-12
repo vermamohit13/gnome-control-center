@@ -76,6 +76,9 @@ struct _CcPrintersPanel
   cups_dest_t *dests;
   int num_dests;
 
+  cups_dest_t *ipp_dests;
+  int num_ipp_dests;
+
   GPermission *permission;
   gboolean is_authorized;
 
@@ -899,6 +902,15 @@ actualize_printers_list (CcPrintersPanel *self)
                            self);
 }
 
+static void 
+actualize_ipp_device_list (CcPrintersPanel *self)
+{
+  pp_cups_get_new_dests_async (self->cups,
+                           cc_panel_get_cancellable (CC_PANEL (self)),
+                           actualize_printers_list_cb,
+                           self);
+}
+
 static void
 printer_add_async_cb (GObject      *source_object,
                       GAsyncResult *res,
@@ -949,7 +961,8 @@ new_printer_dialog_response_cb (GtkDialog *_dialog,
       new_printer = pp_new_printer_dialog_get_new_printer (pp_new_printer_dialog);
       g_object_get(G_OBJECT (new_printer), "name", &self->new_printer_name, NULL);
 
-      actualize_printers_list (self);
+      // actualize_printers_list (self);
+      actualize_ipp_device_list (self);
 
       pp_new_printer_add_async (new_printer,
                                 cc_panel_get_cancellable (CC_PANEL (self)),
@@ -1020,7 +1033,8 @@ update_sensitivity (gpointer user_data)
 static void
 on_permission_changed (CcPrintersPanel *self)
 {
-  actualize_printers_list (self);
+  // actualize_printers_list (self);
+  actualize_ipp_device_list (self);
   update_sensitivity (self);
 }
 
@@ -1328,7 +1342,10 @@ Please check your installation");
 
   self->size_group = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
 
-  actualize_printers_list (self);
+  // actualize_printers_list (self);
+  
+  actualize_ipp_device_list (self);
+
   attach_to_cups_notifier (self);
 
   get_all_ppds_async (cc_panel_get_cancellable (CC_PANEL (self)),
