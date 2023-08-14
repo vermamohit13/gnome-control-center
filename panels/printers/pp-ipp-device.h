@@ -56,7 +56,9 @@ typedef struct
         GDBusConnection     *dbus_connection;
         GCancellable        *avahi_cancellable;
         GList               *system_objects;
-
+        GMainLoop           *loop;
+        gpointer             user_data;
+        char*                service_type;
 } Avahi;
 
 typedef struct
@@ -80,8 +82,8 @@ typedef struct
                              got_printer_type;
         int                  port;
         int                  family;
-
+        gpointer             user_data;
 } AvahiData;
 
-int                           cupsGetIPPDevices (cups_dest_t **dests,
-                                                 int         num_of_dests);
+// int                           cupsGetIPPDevices (gpointer user_data);
+Avahi*                           cupsGetIPPDevices (gpointer user_data);

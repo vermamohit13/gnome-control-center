@@ -23,7 +23,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include "pp-utils.h"
-#include "pp-ipp-device.h"
+// #include "pp-ipp-device.h"
 
 G_BEGIN_DECLS
 

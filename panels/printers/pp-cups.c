@@ -22,6 +22,7 @@
 
 #include "pp-cups.h"
 #include "pp-ipp-device.h"
+#include <cups/cups.h>
 
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 5)
 #define HAVE_CUPS_1_6 1
@@ -84,22 +85,22 @@ _pp_cups_get_dests_thread (GTask        *task,
 
 static void
 _pp_cups_get_new_dests_thread (GTask        *task,
-                           gpointer     *object,
-                           gpointer      task_data,
-                           GCancellable *cancellable)
+                               gpointer     *object,
+                               gpointer      task_data,
+                               GCancellable *cancellable)
 {
-  PpCupsDests *dests;
+  Avahi* backends;
 
-  dests = g_new0 (PpCupsDests, 1);
-  dests->num_of_dests = cupsGetIPPDevices (&dests->dests, dests->num_of_dests);
+  backends = cupsGetIPPDevices (NULL);
 
   if (g_task_set_return_on_cancel (task, FALSE))
     {
-      g_task_return_pointer (task, dests, (GDestroyNotify) pp_cups_dests_free);
+      g_task_return_pointer (task, backends, (GDestroyNotify) pp_cups_dests_free);
     }
   else
     {
-      pp_cups_dests_free (dests);
+      // pp_cups_dests_free (backends);
+      g_message("Cancelled discovery for ipp devices\n");
     }
 }
 
