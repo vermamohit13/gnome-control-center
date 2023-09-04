@@ -684,6 +684,12 @@ pp_printer_entry_get_name (PpPrinterEntry *self)
 }
 
 const gchar *
+pp_printer_entry_get_web_interface (PpPrinterEntry *self)
+{
+  g_return_val_if_fail (PP_IS_PRINTER_ENTRY (self), NULL);
+  return self->web_interface;
+}
+const gchar *
 pp_printer_entry_get_hostname (PpPrinterEntry *self)
 {
   g_return_val_if_fail (PP_IS_PRINTER_ENTRY (self), NULL);

@@ -900,6 +900,8 @@ static gboolean
 remove_nonexisting_entry (CcPrintersPanel *self,
                           PpPrinterEntry  *entry)
 {
+  if (pp_printer_entry_get_web_interface(entry) != NULL) return FALSE;
+
   gboolean exists = FALSE;
   gint     i;
 
