@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.10.3 -->
+<interface>
+  <!-- interface-name printerappselectiondialog.ui -->
+  <requires lib="gtk" version="4.6"/>
+  <template class="PpPrinterAppSelectionDialog" parent="GtkDialog">
+    <property name="accessible-role">menu-item-radio</property>
+    <property name="default-height">400</property>
+    <property name="default-width">500</property>
+    <property name="destroy-with-parent">True</property>
+    <property name="height-request">400</property>
+    <property name="resizable">False</property>
+    <property name="title">Add CUPS-IPP printer</property>
+    <property name="width-request">500</property>
+    <child>
+      <object class="GtkFixed">
+        <child>
+          <object class="GtkLabel" id="installed_printer_app_label">
+            <property name="halign">center</property>
+            <property name="label">Select an already installed printer application :</property>
+            <property name="margin-start">70</property>
+            <property name="margin-top">70</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkCheckButton">
+            <property name="margin-start">29</property>
+            <property name="margin-top">65</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkTreeView">
+            <property name="accessible-role">row-group</property>
+            <property name="enable-grid-lines">horizontal</property>
+            <property name="height-request">44</property>
+            <property name="margin-start">70</property>
+            <property name="margin-top">190</property>
+            <property name="width-request">250</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkComboBox" id="installed_printer_app_combo_box">
+            <property name="halign">baseline</property>
+            <property name="height-request">34</property>
+            <property name="margin-start">70</property>
+            <property name="margin-top">100</property>
+            <property name="width-request">250</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="config_via_web_interface_button">
+            <property name="label">Configure via Web Interface</property>
+            <property name="margin-start">160</property>
+            <property name="margin-top">350</property>
+            <property name="valign">start</property>
+            <property name="width-request">100</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="set_up_title_label">
+            <property name="label">Choose an option how to set up this printer.</property>
+            <property name="margin-start">50</property>
+            <property name="margin-top">30</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="internet_printer_app_label">
+            <property name="halign">center</property>
+            <property name="label">Select printer application from the internet :</property>
+            <property name="margin-start">70</property>
+            <property name="margin-top">160</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="classic_driver_label">
+            <property name="halign">center</property>
+            <property name="label">Select a classic driver for this printer (legacy)</property>
+            <property name="margin-start">70</property>
+            <property name="margin-top">250</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="classic_driver_label_2">
+            <property name="halign">center</property>
+            <property name="label">Set up this printer with a classic CUPS driver</property>
+            <property name="margin-start">70</property>
+            <property name="margin-top">275</property>
+            <property name="opacity">0.7</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="set_up_printer_button">
+            <property name="label">Set up printer</property>
+            <property name="margin-start">440</property>
+            <property name="margin-top">350</property>
+            <property name="width-request">100</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkCheckButton">
+            <property name="margin-start">29</property>
+            <property name="margin-top">244</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkCheckButton">
+            <property name="margin-start">29</property>
+            <property name="margin-top">154</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

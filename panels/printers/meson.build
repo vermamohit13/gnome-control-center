@@ -37,7 +37,8 @@ sources = files(
   'pp-printer.c',
   'pp-samba.c',
   'pp-utils.c',
-  'pp-ipp-device.c'
+  'pp-ipp-device.c',
+  'pp-printer-app-selection-dialog.c'
 )
 
 resource_data = files(
@@ -50,6 +51,7 @@ resource_data = files(
   'printer-entry.ui',
   'printers.ui',
   'app-printer-dialog.ui',
+  'pp-printer-app-selection-dialog.ui'
 )
 
 sources += gnome.compile_resources(

@@ -1732,53 +1732,53 @@ get_all_ppds_async_cb (PPDList  *ppds,
                                         self->all_ppds_list);
 }
 
-// static gint	
-// sort_function (GtkListBoxRow *row1,	
-//                GtkListBoxRow *row2,	
-//                gpointer       user_data)	
-// {	
-//   PpPrinterEntry *entry1 = PP_PRINTER_ENTRY (row1);	
-//   PpPrinterEntry *entry2 = PP_PRINTER_ENTRY (row2);	
+static gint	
+sort_function (GtkListBoxRow *row1,	
+               GtkListBoxRow *row2,	
+               gpointer       user_data)	
+{	
+  PpPrinterEntry *entry1 = PP_PRINTER_ENTRY (row1);	
+  PpPrinterEntry *entry2 = PP_PRINTER_ENTRY (row2);	
 
-//   int val;
+  int val;
 
-//   if (pp_printer_entry_get_hostname (entry1) != NULL)	
-//     {	
-//       if (pp_printer_entry_get_hostname (entry2) != NULL)	
-//         {
-//           val = g_ascii_strcasecmp (pp_printer_entry_get_hostname (entry1), pp_printer_entry_get_hostname (entry2)); 
+  if (pp_printer_entry_get_hostname (entry1) != NULL)	
+    {	
+      if (pp_printer_entry_get_hostname (entry2) != NULL)	
+        {
+          val = g_ascii_strcasecmp (pp_printer_entry_get_hostname (entry1), pp_printer_entry_get_hostname (entry2)); 
           
-//           if (val == 0)
-//            {
-//               if (pp_printer_entry_get_name (entry1) != NULL)	
-//                {	
-//                   if (pp_printer_entry_get_name (entry2) != NULL)	
-//                     return g_ascii_strcasecmp (pp_printer_entry_get_name (entry1), pp_printer_entry_get_name (entry2));
-//                   else
-//                     return 1;
-//                }
-//                else 
-//                {
-//                    if (pp_printer_entry_get_name (entry2) != NULL)	
-//                       return -1;	
-//                     else	
-//                       return 0;
-//                }
-//           }
+          if (val == 0)
+           {
+              if (pp_printer_entry_get_name (entry1) != NULL)	
+               {	
+                  if (pp_printer_entry_get_name (entry2) != NULL)	
+                    return g_ascii_strcasecmp (pp_printer_entry_get_name (entry1), pp_printer_entry_get_name (entry2));
+                  else
+                    return 1;
+               }
+               else 
+               {
+                   if (pp_printer_entry_get_name (entry2) != NULL)	
+                      return -1;	
+                    else	
+                      return 0;
+               }
+          }
 
-//           return val; 
-//         }
-//       else	
-//         return 1;	
-//     }	
-//   else	
-//     {	
-//       if (pp_printer_entry_get_hostname (entry2) != NULL)	
-//         return -1;	
-//       else	
-//         return 0;	
-//     }	
-// }
+          return val; 
+        }
+      else	
+        return 1;	
+    }	
+  else	
+    {	
+      if (pp_printer_entry_get_hostname (entry2) != NULL)	
+        return -1;	
+      else	
+        return 0;	
+    }	
+}
 
 static gboolean
 filter_function (GtkListBoxRow *row,

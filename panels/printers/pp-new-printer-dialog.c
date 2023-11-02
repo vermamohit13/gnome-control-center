@@ -34,6 +34,8 @@
 #include "pp-host.h"
 #include "pp-new-printer.h"
 #include "pp-ppd-selection-dialog.h"
+#include "pp-printer-app-selection-dialog.h"
+#include "cc-printers-panel.h"
 #include "pp-app-printer-dialog.h"
 #include "pp-samba.h"
 #include "pp-utils.h"
@@ -139,6 +141,8 @@ struct _PpNewPrinterDialog
   gboolean  samba_searching;
 
   PpPPDSelectionDialog *ppd_selection_dialog;
+
+  PpPrinterAppSelectionDialog *printer_app_selection_dialog;
 
   PpAppPrinterDialog *app_printer_dialog;
 
@@ -1753,13 +1757,28 @@ new_printer_dialog_response_cb (PpNewPrinterDialog *self,
           //   }
           // else
           //   {
-          //     self->new_device = pp_print_device_copy (device);
-          //     self->user_callback (GTK_DIALOG (self), GTK_RESPONSE_OK, self->user_data);
+          //     // self->new_device = pp_print_device_copy (device);
+          //     // self->user_callback (GTK_DIALOG (self), GTK_RESPONSE_OK, self->user_data);
+
+              
           //   }
-          self->app_printer_dialog = pp_app_printer_dialog_new (device);
-          gtk_window_set_transient_for (GTK_WINDOW (self->app_printer_dialog),
-                                            GTK_WINDOW (self));
-          gtk_widget_show ( GTK_WIDGET (self->app_printer_dialog));
+          
+
+          /**/
+            get_installed_printer_apps_async (self->cancellable,
+                          NULL,
+                          self);
+                  
+          /**/
+          // self->app_printer_dialog = pp_app_printer_dialog_new (device);
+          // gtk_window_set_transient_for (GTK_WINDOW (self->app_printer_dialog),
+          //                                   GTK_WINDOW (self));
+          // gtk_widget_show ( GTK_WIDGET (self->app_printer_dialog));
+          
+          // self->printer_app_selection_dialog = pp_printer_app_selection_dialog_new (device);
+          // gtk_window_set_transient_for (GTK_WINDOW (self->printer_app_selection_dialog),
+          //                                   GTK_WINDOW (self));
+          // gtk_widget_show ( GTK_WIDGET (self->printer_app_selection_dialog));
         }
     }
   else

@@ -30,6 +30,7 @@
 
 #define DBUS_TIMEOUT      120000
 #define DBUS_TIMEOUT_LONG 600000
+#define IPP_OP_PAPPL_FIND_DRIVERS	(ipp_op_t)0x402c
 
 #if (CUPS_VERSION_MAJOR > 1) || (CUPS_VERSION_MINOR > 5)
 #define HAVE_CUPS_1_6 1
@@ -3372,6 +3373,238 @@ get_cups_devices_async_dbus_cb (GObject      *source_object,
                       g_cancellable_is_cancelled (data->cancellable),
                       data->user_data);
     }
+}
+
+static void
+get_printer_apps_async_dbus_cb (GObject      *source_object,
+                                GAsyncResult *res,
+                                gpointer      user_data)
+{
+  g_autoptr(GPtrArray) apps = NULL;
+  g_autoptr(GVariant) output = NULL;
+  g_autoptr(GCDData)  data = user_data;
+  g_autoptr(GError)   error = NULL;
+  gint                num_of_apps = 0;
+
+  output = g_dbus_connection_call_finish (G_DBUS_CONNECTION (source_object),
+                                          res,
+                                          &error);
+
+  if (output)
+    {
+      const gchar *ret_error;
+      g_autoptr(GVariant) apps_variant = NULL;
+      gboolean     is_network_device;
+      g_autoptr(GVariantIter) iter = NULL;
+      const gchar  *key, *value;
+      gint          index = -1, max_index = -1, i;
+
+      g_variant_get (output, "(&s@a{ss})",
+                     &ret_error,
+                     &apps_variant);
+
+      if (ret_error[0] != '\0')
+        {
+          g_warning ("cups-pk-helper: getting of Printer Apps failed: %s", ret_error);
+        }
+
+      g_variant_get (apps_variant, "a{ss}", &iter);
+      while (g_variant_iter_next (iter, "{&s&s}", &key, &value))
+        {
+          index = get_suffix_index (key);
+          if (index > max_index)
+            max_index = index;
+        }
+
+      if (max_index >= 0)
+        {
+          g_autoptr(GVariantIter) iter2 = NULL;
+
+          num_of_apps = max_index + 1;
+          apps = g_ptr_array_new_with_free_func (g_object_unref);
+          for (i = 0; i < num_of_apps; i++)
+             g_ptr_array_add (apps, pp_print_device_new ());
+
+          g_variant_get (apps_variant, "a{ss}", &iter2);
+          while (g_variant_iter_next (iter2, "{&s&s}", &key, &value))
+            {
+              PpPrintDevice *device;
+
+              index = get_suffix_index (key);
+              g_message("%s - %s\n", key, value);
+              if (index >= 0)
+                {
+                  device = g_ptr_array_index (apps, index);
+                  if (g_str_has_prefix (key, "device-class"))
+                    {
+                      is_network_device = g_strcmp0 (value, "network") == 0;
+                      g_object_set (device, "is-network-device", is_network_device, NULL);
+                    }
+                  else if (g_str_has_prefix (key, "device-id"))
+                    g_object_set (device, "device-id", value, NULL);
+                  else if (g_str_has_prefix (key, "device-info"))
+                    g_object_set (device, "device-info", value, NULL);
+                  else if (g_str_has_prefix (key, "device-make-and-model"))
+                    {
+                      g_object_set (device,
+                                    "device-make-and-model", value,
+                                    "device-name", value,
+                                    NULL);
+                    }
+                  else if (g_str_has_prefix (key, "device-uri"))
+                    g_object_set (device, "device-uri", value, NULL);
+                  else if (g_str_has_prefix (key, "device-location"))
+                    g_object_set (device, "device-location", value, NULL);
+
+                  g_object_set (device, "acquisition-method", ACQUISITION_METHOD_DEFAULT_CUPS_SERVER, NULL);
+                }
+            }
+        }
+    }
+  else
+    {
+      if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        g_warning ("%s", error->message);
+
+      // data->callback (apps,
+      //                 TRUE,
+      //                 g_cancellable_is_cancelled (data->cancellable),
+      //                 data->user_data);
+      return;
+    }
+
+  // if (data->backend_list)
+  //   {
+  //     if (!g_cancellable_is_cancelled (data->cancellable))
+  //       {
+  //         GVariantBuilder  *include_scheme_builder = NULL;
+  //         GVariantBuilder  *exclude_scheme_builder = NULL;
+  //         g_autofree gchar *backend_name = NULL;
+
+  //         backend_name = data->backend_list->data;
+
+  //         data->callback (apps,
+  //                         FALSE,
+  //                         FALSE,
+  //                         data->user_data);
+
+  //         if (g_strcmp0 (backend_name, OTHER_BACKENDS) != 0)
+  //           {
+  //             include_scheme_builder = g_variant_builder_new (G_VARIANT_TYPE ("as"));
+  //             g_variant_builder_add (include_scheme_builder, "s", backend_name);
+  //           }
+  //         else
+  //           {
+  //             exclude_scheme_builder = create_other_backends_array ();
+  //           }
+
+  //         data->backend_list = g_list_delete_link (data->backend_list, data->backend_list);
+
+  //         g_dbus_connection_call (G_DBUS_CONNECTION (g_object_ref (source_object)),
+  //                                 MECHANISM_BUS,
+  //                                 "/",
+  //                                 MECHANISM_BUS,
+  //                                 "DevicesGet",
+  //                                 g_variant_new ("(iiasas)",
+  //                                                0,
+  //                                                0,
+  //                                                include_scheme_builder,
+  //                                                exclude_scheme_builder),
+  //                                 G_VARIANT_TYPE ("(sa{ss})"),
+  //                                 G_DBUS_CALL_FLAGS_NONE,
+  //                                 DBUS_TIMEOUT,
+  //                                 data->cancellable,
+  //                                 get_printer_apps_async_dbus_cb,
+  //                                 data);
+  //         g_steal_pointer (&data);
+
+  //         if (include_scheme_builder)
+  //           g_variant_builder_unref (include_scheme_builder);
+
+  //         if (exclude_scheme_builder)
+  //           g_variant_builder_unref (exclude_scheme_builder);
+
+  //         return;
+  //       }
+  //     else
+  //       {
+  //         data->callback (apps,
+  //                         TRUE,
+  //                         TRUE,
+  //                         data->user_data);
+  //       }
+  //   }
+  // else
+  //   {
+  //     data->callback (apps,
+  //                     TRUE,
+  //                     g_cancellable_is_cancelled (data->cancellable),
+  //                     data->user_data);
+  //   }
+}
+
+void 
+find_supported_printer_app_async ()
+{
+
+}
+
+void 
+get_available_drivers_async (GCancellable *cancellable,
+                             GCDCallback   callback,
+                             gpointer      user_data)
+{
+  ipp_t		            *request,		
+		                  *response,		
+		                  *supported = NULL;	
+  ipp_attribute_t     *attr;		
+  http_t	*http;			// HTTP connection
+  char uri[1024];             /* copy of printer URI */
+  http_uri_status_t	uri_status;	/* URI separation status */
+
+            http = httpConnect2("localhost", 8000, NULL, vars.family,
+                                     HTTP_ENCRYPTION_IF_REQUESTED, 1, 30000, NULL);
+            
+            request = ippNewRequest(IPP_OP_PAPPL_FIND_DRIVERS);
+            
+            ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_CHARSET, "attributes-charset", NULL, "utf-8");
+            ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_LANGUAGE, "attributes-natural-language", NULL, "en-GB");
+            ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+            ippAddString(request, IPP_TAG_OPERATION, IPP_CONST_TAG(IPP_TAG_URI), "system-uri", NULL, "ipp://localhost/ipp/system");
+            
+
+}
+
+void 
+get_installed_printer_apps_async (GCancellable *cancellable,
+                                  GCDCallback   callback,
+                                  gpointer      user_data)
+{
+  g_autoptr(GDBusConnection) bus = NULL;
+  g_autoptr(GError) error = NULL;
+
+    bus = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, &error);
+  if (!bus)
+   {
+     g_warning ("Failed to get system bus: %s", error->message);
+     callback (NULL, TRUE, FALSE, user_data);
+     return;
+   }
+
+  g_dbus_connection_call (bus,
+                          MECHANISM_BUS,
+                          "/",
+                          MECHANISM_BUS,
+                          "PrinterAppGet",
+                          g_variant_new ("(i)",
+                                         1000),
+                          G_VARIANT_TYPE ("(sa{ss})"),
+                          G_DBUS_CALL_FLAGS_NONE,
+                          DBUS_TIMEOUT,
+                          cancellable,
+                          get_printer_apps_async_dbus_cb,
+                          NULL);
+
 }
 
 void
